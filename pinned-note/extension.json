@@ -1,0 +1,12 @@
+{
+	"id": "pinned-note",
+	"name": "Pinned note",
+	"version": "1.0.0",
+	"contract": 1,
+	"description": "A note you write once in Settings: every agent can read it.",
+	"server": "server.js",
+	"page": "page.js",
+	"styles": "page.css",
+	"icon": "icon.svg",
+	"paid": false
+}

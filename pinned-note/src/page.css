@@ -1,0 +1,9 @@
+/* This sheet reaches Sonar's whole page: it styles the extension's own classes only, with Sonar's tokens. */
+.pinned-note {
+	align-self: stretch;
+}
+.pinned-note-actions {
+	display: flex;
+	align-items: center;
+	gap: var(--space-3);
+}
