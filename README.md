@@ -22,25 +22,31 @@ At the root, with [Bun](https://bun.sh) 1.4.4:
 
 1. `bun run setup`: `bun install` in each extension's folder.
 2. `bun run check` (the types) and `bun run test`, for each extension.
-3. `bun run build`: builds each extension, then writes `release/`. It refuses two folders of the same id.
+3. `bun run build`: builds each extension, then writes `release/`. It refuses a card the contract refuses, a folder not named by its card's id, and an archive whose SHA-256 is not its card's.
 
-In one extension's folder, `bun install`, `bun run check`, `bun test` and `bun run build` work on that extension alone. The build packs the archive with the system's `tar` (GNU tar or bsdtar); `TAR` names another one.
+In one extension's folder, `bun install`, `bun run check`, `bun test` and `bun run build` work on that extension alone. The build writes the archive itself, without the system's `tar`: two builds of the same commit give the same archive on one system, so a release does not change the SHA-256 of an extension that did not change.
 
 ## Add an extension
 
-Add a folder at the root, named by the extension's id, with its `extension.json`: copy `pinned-note/`, then change the `id` (lower case letters, digits and dashes), the `name` and the `description` of its card, and the `name` of its `package.json`. Its `package.json` links the contract by `"@sonar/extension": "file:../vendor/sonar-extension"`. The root's scripts and the workflows take it from then on. Add it to the table above.
+Add a folder at the root, named by the extension's id, with its `extension.json`: copy `pinned-note/`, then change the `id` (lower case letters, digits and dashes), the `name` and the `description` of its card, the `name` of its `package.json`, and `pinned-note` in `src/` and `tests/` (Sonar names the tool `<id>_read`). Its `package.json` links the contract by `"@sonar/extension": "file:../vendor/sonar-extension"`. Run `bun install` in it once, which writes its `bun.lock` with its new name. The root's scripts and the workflows take it from then on. Add it to the table above.
 
 ## Publish
 
-Push a tag named by the day, `2026.11.20` (a second release on the same day: `2026.11.20.2`). The workflow `Release` checks, tests and builds every extension, then publishes the release with all the files of `release/`. Each extension's version stays in its card: change it in `extension.json` when the extension changes.
+Push a tag named by the day on a commit of `main`, `2026.11.20` (a second release on the same day: `2026.11.20.2`). The workflow `Release` checks, tests and builds every extension, then publishes the release, marked as the latest, with all the files of `release/`. Each extension's version stays in its card: change it in `extension.json` when the extension changes.
 
-The limit: a release publishes every extension again, the ones that did not change too. Sonar compares the version of each card with the version installed, and offers an update only when the card's is newer.
+The limit: a release publishes every extension again, the ones that did not change too. Sonar compares the version of each card with the version installed, and offers an update when the card's is different. Since two builds of the same commit give the same archive, an extension that did not change keeps its SHA-256 from one release to the next.
 
 ## Write your own extension
 
-Copy the folder `pinned-note/` into a repository of your own, with `vendor/` at its root, and link the contract by `"@sonar/extension": "file:./vendor/sonar-extension"`. A repository with one extension publishes its folder's two files, `release/extension.json` and `release/extension.tar.gz`, in a GitHub release, under these names. It installs by `owner/repository`.
+In a repository of your own, with one extension:
 
-Sonar's documentation for extension authors is `docs/extensions.md` in Sonar's repository.
+1. Copy the files of `pinned-note/` to its root, and `vendor/sonar-extension/` of this repository to `vendor/sonar-extension/` in it.
+2. In its `package.json`, link the contract by `"@sonar/extension": "file:./vendor/sonar-extension"` (the `bun.lock` copied still says `file:../vendor/…`), and change the `name`.
+3. In its `extension.json`, change the `id` (lower case letters, digits and dashes), the `name` and the `description`. Replace `pinned-note` by the new id in `src/` and `tests/`: Sonar names the tool `<id>_read`.
+4. Run `bun install` once, without `--frozen-lockfile`: it writes `bun.lock` again with the new link. Then `bun run check`, `bun test` and `bun run build`.
+5. Publish the two files of `release/`, `extension.json` and `extension.tar.gz`, in a GitHub release, under these names. It installs by `owner/repository`.
+
+Sonar's documentation for extension authors: [`docs/extensions.md`](https://github.com/Krosnoz/sonar/blob/main/docs/extensions.md).
 
 ## License
 

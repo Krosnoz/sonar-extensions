@@ -14,7 +14,7 @@ It shows each part of an extension's contract once, with as little code as possi
 | Tests with the contract's kit | [`tests/server.test.ts`](tests/server.test.ts) |
 | The build and the release | [`scripts/build.ts`](scripts/build.ts), the repository's [`.github/workflows/`](../.github/workflows/) |
 
-Sonar's documentation for extension authors is `docs/extensions.md` in Sonar's repository.
+Sonar's documentation for extension authors: [`docs/extensions.md`](https://github.com/Krosnoz/sonar/blob/main/docs/extensions.md).
 
 ## Develop it
 
@@ -26,7 +26,7 @@ The contract (`@sonar/extension`) is not on npm yet: the repository's one copy l
 ## Start from it
 
 - Another extension of this repository: copy this folder at the root, named by the new id, as the repository's [README](../README.md) says.
-- An extension in a repository of your own: copy this folder and `vendor/` into it, and link the contract by `"@sonar/extension": "file:./vendor/sonar-extension"` in `package.json`. Change the `id` in `extension.json` (lower case letters, digits and dashes), its `name` and its `description`. Publish a GitHub release with the two files of `release/`, `extension.json` and `extension.tar.gz`: it installs by `owner/repository`.
+- An extension in a repository of your own: copy the files of this folder to its root, and `vendor/sonar-extension/` to `vendor/sonar-extension/` in it. Link the contract by `"@sonar/extension": "file:./vendor/sonar-extension"` in `package.json` (the `bun.lock` copied still says `file:../vendor/…`), and change its `name`. Change the `id` in `extension.json` (lower case letters, digits and dashes), its `name` and its `description`, and `pinned-note` by the new id in `src/` and `tests/` (Sonar names the tool `<id>_read`). Run `bun install` once, without `--frozen-lockfile`: it writes `bun.lock` again. Then `bun run check`, `bun test` and `bun run build`. Publish a GitHub release with the two files of `release/`, `extension.json` and `extension.tar.gz`: it installs by `owner/repository`.
 
 ## Install it in Sonar
 
