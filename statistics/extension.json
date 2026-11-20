@@ -1,0 +1,12 @@
+{
+	"id": "statistics",
+	"name": "Statistics",
+	"version": "0.1.0",
+	"contract": 1,
+	"description": "Week by week: whether the work goes faster, whether the agents work well, what it costs and how much of your time it takes.",
+	"server": "server.js",
+	"page": "page.js",
+	"styles": "page.css",
+	"reads": ["usage", "presence", "tasks", "sessions", "merges", "commands", "trust"],
+	"paid": false
+}

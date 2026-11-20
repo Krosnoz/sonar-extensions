@@ -1,0 +1,113 @@
+// The page's texts in English, chosen by the page's language (./kit.ts); their French is in ./texts-fr.ts. Those of
+// Sonar's own statistics, with the few of Sonar's usage texts their blocks read: a block's verdict and the durations.
+
+import type { Mode } from "./figures";
+
+export const english = {
+	// The comparison: the weeks compared, then what they are compared with, in a few words beside the switch.
+	modes: [
+		{ key: "week", label: "Week" },
+		{ key: "four", label: "4 weeks" },
+		{ key: "sonar", label: "Since Sonar" },
+	] as readonly { readonly key: Mode; readonly label: string }[],
+	modeNote: { week: "against the week before", four: "weekly mean, against the 4 before", sonar: "weekly mean, against before Sonar" } as Record<
+		Mode,
+		string
+	>,
+	// The questions, and their verdict.
+	faster: "Is the project moving faster?",
+	agentsWell: "Do its agents work well?",
+	projectCost: "What does it cost?",
+	myTime: "How much of my time?",
+	whereGoes: "Where do your time and money go?",
+	howYouWork: "How you work",
+	sonarHolds: "Does Sonar keep its agents in hand?",
+	allGood: "everything goes the right way",
+	worse: (count: number) => (count > 1 ? `${count} points get worse` : "one point gets worse"),
+	nothingToCompare: "nothing to compare yet",
+	still: "nothing moves",
+	// A tile's comparison.
+	same: "=",
+	notMeasured: (since: string) => `measured since ${since}`,
+	unmeasured: "not measured yet",
+	// The figures.
+	prs: "Merged PRs",
+	lead: "Time to merge",
+	commits: "Commits",
+	closed: "Closed worksites",
+	trust: "Trust",
+	firstPass: "Merged first time",
+	verification: "Verification",
+	sentBack: "Messages sent back",
+	cost: "API equivalent",
+	costPerPr: "Cost per merged PR",
+	costPerClosed: "Cost per worksite",
+	share: "Share of the total",
+	myTimeTile: "Your time",
+	agentTime: "Agents' time",
+	myTimePerSession: "Your time per session",
+	waited: "Agents waiting for you",
+	leverage: "Leverage",
+	parallel: "Sessions in parallel",
+	reply: "Reply delay",
+	tasksFailed: "Failed delegated tasks",
+	trusted: "Trusted projects",
+	strays: "Stopped commands",
+	// The figures' hints.
+	prsHint: "per week, into the base branch",
+	leadHint: "median, from the PR's opening to its merge",
+	commitsHint: "per week, merges aside",
+	closedHint: "closed sessions, delegated tasks aside",
+	firstPassHint: "never set aside by the merge queue",
+	verificationHint: "points that work",
+	sentBackHint: "turn ends sent back by the check",
+	costHint: "per week, the agents' work",
+	shareHint: "of every project's cost",
+	myTimeHint: "read, written, dictated in Sonar",
+	agentTimeHint: "per week, sum of the turns",
+	perSessionHint: "per session the agents worked in",
+	waitedHint: "per week, from their answer to your message",
+	leverageHint: "agent hours for 1 hour of you",
+	parallelHint: "median of the active days",
+	replyHint: "median, from their answer to your message",
+	tasksFailedHint: "failed or stopped for lack of time",
+	trustedHint: "level 3: the 4 proofs",
+	straysHint: "left by agents, stopped by Sonar",
+	trustLevel: { 1: "To prove", 2: "In progress", 3: "Trusted" } as Record<1 | 2 | 3, string>,
+	proofs: (count: number) => `${count} proof${count === 1 ? "" : "s"} out of 4`,
+	noTrust: "no folder to read",
+	of: (part: number, whole: number) => `${part} / ${whole}`,
+	trustedOf: (part: number, whole: number) => `${part} out of ${whole}`,
+	leverageValue: (times: string) => `×${times}`,
+	seeTrust: "Trust",
+	// The projects' lines.
+	project: "Project",
+	timeShare: "Share of your time",
+	prsShort: "PR",
+	costShort: "Cost",
+	myTimeShort: "Your time",
+	trustShort: "Trust",
+	noProjectTitle: "No work over these weeks",
+	noProject: "A project shows here once an agent has worked in it.",
+	moreProjects: (count: number) => `${count} more project${count === 1 ? "" : "s"}`,
+	// The project's sessions on a strip.
+	tasks: "Its sessions · 7 days",
+	noTasksTitle: "No session over 7 days",
+	noTasks: "A session shows here once an agent of the project has worked.",
+	works: "the agent works",
+	waits: "it waits for you",
+	touches: "you step in",
+	// While Sonar does not measure the user's activity, the strips have no message of theirs.
+	touchesUnmeasured: "you step in: not measured",
+	taskLine: (mine: string, agents: string, waited: string) => `you ${mine} · agents ${agents} · waited for you ${waited}`,
+	// Durations and delays.
+	minutes: (count: number) => `${count} min`,
+	hoursMinutes: (hours: number, minutes: string) => `${hours} h ${minutes}`,
+	days: (count: number) => `${count} d`,
+	inSeconds: (count: string) => `${count} s`,
+	inMinutes: (count: string) => `${count} min`,
+	inHours: (count: string) => `${count} h`,
+	inDays: (count: string) => `${count} d`,
+};
+
+export type Texts = typeof english;
