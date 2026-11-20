@@ -1,0 +1,30 @@
+# On a tag named by the day (2026.11.20, or 2026.11.20.2 for a second release that day): checks, tests and builds every
+# extension, then publishes the GitHub release Sonar installs from, two files per extension (<id>.json and
+# <id>.tar.gz). Each extension's version stays in its card.
+name: Release
+
+on:
+  push:
+    tags: ["[0-9][0-9][0-9][0-9].[0-9][0-9].[0-9][0-9]*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4.2.2
+      - uses: oven-sh/setup-bun@v2.0.2
+        with:
+          bun-version: 1.4.4
+      - name: The tag is a day
+        run: echo "$GITHUB_REF_NAME" | grep -Eq '^[0-9]{4}\.[0-9]{2}\.[0-9]{2}(\.[0-9]+)?$'
+      - run: bun run setup --frozen-lockfile
+      - run: bun run check
+      - run: bun run test
+      - run: bun run build
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" release/* --title "$GITHUB_REF_NAME" --generate-notes

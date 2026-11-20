@@ -1,0 +1,36 @@
+# On each push and pull request: checks and tests every extension, then builds the release's files with the tar of each
+# system (GNU tar on Linux, bsdtar on macOS and Windows), kept as an artifact, so that each archive can be installed in
+# Sonar.
+name: Build
+
+on: [push, pull_request]
+
+permissions:
+  contents: read
+
+jobs:
+  archive:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4.2.2
+      - uses: oven-sh/setup-bun@v2.0.2
+        with:
+          bun-version: 1.4.4
+      - run: bun run setup --frozen-lockfile
+      - run: bun run check
+      - run: bun run test
+      - run: bun run build
+        env:
+          # Windows' own tar, not the GNU tar that Git for Windows may put first in the PATH.
+          TAR: ${{ runner.os == 'Windows' && 'C:\Windows\System32\tar.exe' || 'tar' }}
+      - name: List each archive
+        shell: bash
+        run: for archive in release/*.tar.gz; do echo "$archive"; tar -tvzf "$archive"; done
+      - uses: actions/upload-artifact@v4.6.2
+        with:
+          name: release-${{ matrix.os }}
+          path: release/
