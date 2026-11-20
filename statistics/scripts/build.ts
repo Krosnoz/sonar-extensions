@@ -1,9 +1,9 @@
 // `bun run build`: writes dist/, the extension's folder as Sonar lays it (its card, its entries bundled and its sheet),
-// then release/, the two files of a GitHub release: extension.tar.gz (dist/ packed by the system's tar) and
-// extension.json (the card, with the archive's SHA-256). Sonar builds nothing and installs no dependency: each entry is
-// one file, its imports bundled. Runs on Windows, macOS and Linux. TAR names another tar program than "tar".
+// then release/, the two files of a GitHub release: extension.tar.gz (dist/ packed here) and extension.json (the card,
+// with the archive's SHA-256). Sonar builds nothing and installs no dependency: each entry is one file, its
+// imports bundled. Runs on Windows, macOS and Linux, without the system's tar.
 
-import { copyFileSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { copyFileSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 const root = join(import.meta.dir, "..");
@@ -26,22 +26,41 @@ for (const [entry, target] of [
 copyFileSync(join(root, "src/page.css"), join(dist, card.styles));
 writeFileSync(join(dist, "extension.json"), `${JSON.stringify(card, null, "\t")}\n`);
 
-// The archive's root is the extension's root. Relative paths: GNU tar reads "C:\…" as a remote host. Its entries are
-// owned by 0, never by the name of the account that built it; GNU tar (Linux, Git Bash) and bsdtar (Windows, macOS) say
-// so with their own options. COPYFILE_DISABLE keeps macOS's tar from adding "._" files.
-const tar = process.env["TAR"] ?? "tar";
-const version = Bun.spawnSync([tar, "--version"]).stdout.toString().split("\n")[0] ?? "";
-const owner = version.includes("GNU tar") ? ["--owner=0", "--group=0", "--numeric-owner"] : ["--uid", "0", "--gid", "0", "--uname", "", "--gname", ""];
-const archive = join(release, "extension.tar.gz");
-const packed = Bun.spawnSync([tar, ...owner, "-czf", "release/extension.tar.gz", "-C", "dist", "."], {
-	cwd: root,
-	env: { ...process.env, COPYFILE_DISABLE: "1" },
-	stderr: "inherit",
-});
-if (packed.exitCode !== 0) throw new Error(`${tar} failed with code ${packed.exitCode}`);
+// The archive is written here, so that two builds of the same files give the same bytes on one system: a ustar entry
+// per file of dist/, in the order of their paths, dated 0, owned by 0, mode 644, no folder entry (Sonar makes the
+// folders). The system's tar would keep each file's date and the folder's order. Bun.gzipSync writes no date; its
+// header names the system it ran on.
+const encoder = new TextEncoder();
+const blocks: Uint8Array[] = [];
+const files = (readdirSync(dist, { recursive: true }) as string[])
+	.filter((path) => statSync(join(dist, path)).isFile())
+	.map((path) => path.replaceAll("\\", "/"))
+	.sort();
+for (const path of files) {
+	const body = readFileSync(join(dist, path));
+	const name = encoder.encode(path);
+	if (name.length > 100) throw new Error(`${path}: a path of over 100 bytes does not fit a ustar header.`);
+	const header = new Uint8Array(512);
+	const field = (at: number, value: string) => header.set(encoder.encode(value), at);
+	header.set(name, 0);
+	field(100, "0000644\0");
+	field(108, "0000000\0");
+	field(116, "0000000\0");
+	field(124, `${body.length.toString(8).padStart(11, "0")}\0`);
+	field(136, "00000000000\0");
+	field(148, "        ");
+	field(156, "0");
+	field(257, "ustar\0");
+	field(263, "00");
+	field(148, `${header.reduce((sum, byte) => sum + byte, 0).toString(8).padStart(6, "0")}\0 `);
+	blocks.push(header, body, new Uint8Array((512 - (body.length % 512)) % 512));
+}
+blocks.push(new Uint8Array(1024));
+const archive = Bun.gzipSync(Buffer.concat(blocks));
+writeFileSync(join(release, "extension.tar.gz"), archive);
 
 // No sha256sum assumed: the digest is computed here, in lower case hexadecimal.
-const sha256 = new Bun.CryptoHasher("sha256").update(readFileSync(archive)).digest("hex");
+const sha256 = new Bun.CryptoHasher("sha256").update(archive).digest("hex");
 writeFileSync(join(release, "extension.json"), `${JSON.stringify({ ...card, sha256 }, null, "\t")}\n`);
 
-console.log(`${card.id} ${card.version}: dist/ and release/ written, packed by ${version}, sha256 ${sha256}`);
+console.log(`${card.id} ${card.version}: dist/ and release/ written, sha256 ${sha256}`);
