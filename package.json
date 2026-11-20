@@ -1,0 +1,11 @@
+{
+	"name": "sonar-extensions",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"setup": "bun scripts/each.ts install",
+		"check": "bun scripts/each.ts run check",
+		"test": "bun scripts/each.ts test",
+		"build": "bun scripts/each.ts run build && bun scripts/release.ts"
+	}
+}
