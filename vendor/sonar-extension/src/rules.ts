@@ -1,7 +1,7 @@
 // Rules of the contract both sides apply: the core (apps/server) and the testing kit (./testing.ts). An extension tested
 // with the kit meets in Sonar the refusals it met in its tests.
 
-import type { CoreScreen, PartPlaces, ReadFamily, ServerEvents } from "./contract";
+import type { CoreScreen, PartPlaces, ReadFamily, ServerEvents, ToastTone } from "./contract";
 import type { Port } from "./ports";
 
 // What one live message may weigh, as JSON in its envelope { type: "ext", id, data }: the socket of a phone carries
@@ -68,6 +68,8 @@ export const isSince = (bound: unknown): bound is { readonly since: number } =>
 export const PART_PLACES: { readonly [Screen in keyof PartPlaces]: readonly PartPlaces[Screen][] } = {
 	statistics: ["top", "accounts", "bottom"],
 	"project-statistics": ["main"],
+	services: ["section"],
+	agents: ["notes"],
 };
 // The same, read by any name: the extension's plain JavaScript may give anything.
 const placesByName: { readonly [screen: string]: readonly string[] } = PART_PLACES;
@@ -76,6 +78,30 @@ const placesByName: { readonly [screen: string]: readonly string[] } = PART_PLAC
 // give anything.
 export const isPartPlace = (screen: unknown, place: unknown): boolean =>
 	typeof screen === "string" && Object.hasOwn(PART_PLACES, screen) && placesByName[screen]?.some((each) => each === place) === true;
+
+// A toast an extension's page shows (PageUi's `toast` of ./contract.ts): a plain text, never HTML, of TOAST_MOST
+// characters at most, in one of the core's tones. Its plain JavaScript may give anything: another text or tone is
+// refused, with what is wrong.
+export const TOAST_MOST = 200;
+export const TOAST_TONES: readonly ToastTone[] = ["info", "error"];
+export function toastRefusal(text: unknown, tone: unknown): "text" | "long" | "tone" | null {
+	if (typeof text !== "string" || !text.trim()) return "text";
+	if (text.length > TOAST_MOST) return "long";
+	return tone === undefined || TOAST_TONES.some((each) => each === tone) ? null : "tone";
+}
+
+// TOAST_PACE.most toasts in TOAST_PACE.ms at most for each extension: one past them is left out, without a word, so
+// that a loop does not cover the screen. A pace of its own for each extension: whether a toast asked `now` may show.
+export const TOAST_PACE = { most: 3, ms: 10_000 } as const;
+export function toastPace(): (now: number) => boolean {
+	const shown: number[] = [];
+	return (now) => {
+		while (shown.length && now - (shown[0] ?? now) >= TOAST_PACE.ms) shown.shift();
+		if (shown.length >= TOAST_PACE.most) return false;
+		shown.push(now);
+		return true;
+	};
+}
 
 // The core's screens an extension's page shows by name (PageApi's `open` of ./contract.ts): "trust", a project's trust;
 // "project-statistics", a project's statistics (the screen of PART_PLACES). A link from its own blocks to the core's

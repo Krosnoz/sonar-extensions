@@ -195,15 +195,25 @@ export type ScreenSlot = {
 };
 
 // A part the extension draws in a screen the core keeps, at a place that screen names (PART_PLACES of ./rules.ts):
-// "statistics", Sonar's statistics, or "project-statistics", a project's, whose `mount` gets `{ project }`. It follows a
-// screen's rules: `mount` once per page load (and per project), then `enter` each time the screen shows, `leave` when it
-// hides; one of them that throws cuts the extension for the page, and its parts leave their places. Its node is drawn in
-// the place's flow, as if its children were the place's. The core offers such a screen while a part is placed in it.
+// "statistics", Sonar's statistics, or "project-statistics", a project's, whose `mount` gets `{ project }`; "services",
+// what it shows in Sonar's Services screen, in the group of the first key its card declares, after the key (drawn again
+// once the key is given or changed), else in a group of its own; "agents", a note at the top of the Agents tab. It follows a screen's rules: `mount`
+// once per page load (and per project), then `enter` each time the screen shows, `leave` when it hides (the Agents tab
+// stays drawn: its notes get one `enter`, no `leave`); one of them that throws cuts the extension for the page, and its
+// parts leave their places. Its node is drawn in the place's flow, as if its children were the place's. The core offers
+// the statistics while a part is placed in them.
 export type PartSlot = {
 	readonly [Screen in keyof PartPlaces]: { readonly screen: Screen; readonly place: PartPlaces[Screen]; readonly mount: ScreenSlot["mount"] };
 }[keyof PartPlaces];
 // The places of each screen the core keeps where an extension draws a part (PART_PLACES of ./rules.ts).
-export type PartPlaces = { readonly statistics: "top" | "accounts" | "bottom"; readonly "project-statistics": "main" };
+export type PartPlaces = {
+	readonly statistics: "top" | "accounts" | "bottom";
+	readonly "project-statistics": "main";
+	readonly services: "section";
+	readonly agents: "notes";
+};
+// The tones of a toast (TOAST_TONES of ./rules.ts).
+export type ToastTone = "info" | "error";
 // The core's screens an extension's page shows by name (CORE_SCREENS of ./rules.ts).
 export type CoreScreen = "trust" | "project-statistics";
 
@@ -234,6 +244,25 @@ export type PageUi = {
 	readonly failure: (reason: string, retry: () => void) => HTMLElement;
 	// Fills `place` with what `read` gives: dots while it waits, then `draw`, or the failure said once with "Retry".
 	readonly load: <Value>(place: HTMLElement, read: () => Promise<Value>, draw: (value: Value) => HTMLElement | readonly HTMLElement[]) => Promise<void>;
+	// A brief message at the top of the screen, the core's toast ("info" by default): a plain text, 200 characters at
+	// most, else it throws (toastRefusal of ./rules.ts). Past 3 in 10 s, one is left out (TOAST_PACE); the same text
+	// already on screen is not shown twice.
+	readonly toast: (text: string, tone?: ToastTone) => void;
+	// The core's switch in its labelled row, as a setting's. A click moves it and calls `change` with its new position;
+	// held while `change` runs. If it rejects, the switch goes back and the failure is said, as for a setting of the core.
+	// `hint`: its tip. `disabled`: held (a key still to give).
+	readonly toggle: (
+		label: string,
+		on: boolean,
+		change: (on: boolean) => Promise<unknown> | void,
+		options?: { readonly hint?: string; readonly disabled?: boolean },
+	) => HTMLElement;
+	// The core's note, as a plugin's at the top of the Agents tab: a plain text, then `action` as a link, and a × that
+	// hides it and calls `close`.
+	readonly note: (
+		text: string,
+		options?: { readonly action?: { readonly label: string; readonly run: () => void }; readonly close?: () => void },
+	) => HTMLElement;
 };
 
 export type PageApi = {
