@@ -24,7 +24,9 @@ export type JudgeRoute = {
 
 // The judge of what agents and the user say (the plugin "jev" fills it while it runs). Each probability goes from 0 to 1.
 export type JudgeProvider = {
-	// Whether an agent waits for the user, how urgently (0 to 1), and which of its sentences its card shows (`status`).
+	// How urgently an agent waits for the user, from 0 (may wait days) to 2 (blocks a work or touches production), and
+	// which of its message's sentences its card shows (`status`, one of messageSentences(message) of ./judge-answers.ts;
+	// "" for none): a judge picks a sentence, it never writes one. Another sentence is left out, the urgency kept.
 	readonly judge: (agentName: string, message: string) => Promise<{ readonly urgency: number; readonly status: string }>;
 	// The probability that the user's answer to `question` still fits what the agent says now.
 	readonly stillRelevant: (answer: string, question: string, current: string) => Promise<number>;
@@ -47,6 +49,12 @@ export type JudgeProvider = {
 		lentKey?: string,
 	) => Promise<number>;
 	// The key this Sonar lends with a session it runs on a linked computer, so that the end-of-turn check there judges as
-	// here; null when it has none.
+	// here; null when it has none. From 1 to 512 characters, none a space or a control character, within 2 s: else
+	// nothing is lent. A judge that lends names its key (`lentAs`).
 	readonly lend?: () => Promise<string | null>;
+	// The name of the key it lends and takes: 2 to 40 characters, lower case letters, digits and "-" ("typesafe" for
+	// TypeSafe's, as the plugin "jev" lends it). Its `lend` goes under that name, and `yesOrNo` gets `lentKey` only from a
+	// judge of the same name on the other computer: a key never reaches a service the user did not choose. Today the
+	// linked computer runs a lent key named "typesafe" alone.
+	readonly lentAs?: string;
 };

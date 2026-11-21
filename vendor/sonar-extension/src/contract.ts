@@ -62,7 +62,8 @@ export type Manifest = {
 	// What it reads of what Sonar measures, told to the user before it is installed: a read of a family it does not
 	// declare throws. It informs the user, it is no barrier: the extension runs in Sonar's process.
 	readonly reads?: readonly ReadFamily[];
-	// The ports of the core it fills (ServerApi's provide), told to the user before it is installed.
+	// The ports of the core it fills (ServerApi's provide). The card of the preview (POST /api/extensions/preview) carries
+	// them; the page will show them before the install in a later version.
 	readonly provides?: readonly Port[];
 };
 

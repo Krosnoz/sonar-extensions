@@ -1,5 +1,5 @@
-// A Sonar server in memory, for the tests of an extension's server entry in its own repository (docs/extensions.md,
-// "Testing it"): `start(bench.api)` runs as in Sonar, without Sonar. What the extension does is read back (its routes
+// A Sonar server in memory, for the tests of an extension's server entry in its own repository
+// (docs/extension-testing.md): `start(bench.api)` runs as in Sonar, without Sonar. What the extension does is read back (its routes
 // called, its live messages, its log, its tools called); what it reads is posed (keys, sessions, projects, settings,
 // events, what Sonar measures). It keeps the core's rules that hold in a few lines (./rules.ts, a key its card does not declare, a route's
 // status), and says them in the words of Sonar in English. It does not check a tool's arguments against its JSON
@@ -12,6 +12,7 @@ import { join } from "node:path";
 import type { AgentTool, Json, Manifest, ProjectLine, RouteHandler, RouteRequest, ServerApi, ServerEntry, ServerEvents, SessionLine, Stop } from "./contract";
 import { readManifest } from "./manifest";
 import type { ClosedSession } from "./measures";
+import { checkedJudge, CORE_LENT_NAMES, judgeRefusal, keptJudge } from "./judge-answers";
 import type { JudgeProvider } from "./ports";
 import { type Measures, measuresOf, notDeclared } from "./testing-measures";
 import { eventRefusal, isToolFullName, isToolName, LIVE_MOST, provideRefusal, routeStatus, SERVER_EVENTS, TOOL_FULL_NAME_MOST, wrongToolField } from "./rules";
@@ -43,7 +44,8 @@ export type Bench = {
 	readonly call: (name: string, input: Json, caller?: ToolCaller) => Promise<ToolAnswer>;
 	// Runs its `start` with `api`, as Sonar does: once it ended, `provide` throws. Returns what `start` returned.
 	readonly start: (start: ServerEntry["start"]) => Promise<void | Stop>;
-	// The judge it gave (`provide.judge`), as Sonar would call it; null while it gave none.
+	// The judge it gave (`provide.judge`), as Sonar would call it: an answer Sonar refuses fails the call
+	// (./judge-answers.ts); null while it gave none.
 	readonly judge: () => JudgeProvider | null;
 };
 
@@ -160,11 +162,19 @@ function eventsOf(log: string[], reads: Manifest["reads"], closed: ClosedSession
 function portsOf(provides: Manifest["provides"]) {
 	let starting = true;
 	let judge: JudgeProvider | null = null;
-	const provide = (provider: JudgeProvider) => {
+	const provide = (given: JudgeProvider) => {
 		const refusal = provideRefusal(provides, "judge", starting, judge !== null);
 		if (refusal === "undeclared") throw new Error(`Its card does not declare the port "judge": add "judge" to its "provides".`);
 		if (refusal === "late") throw new Error(`The port "judge" is filled during its start only.`);
 		if (refusal === "twice") throw new Error(`It already fills the port "judge".`);
+		const provider = keptJudge(given);
+		const named = judgeRefusal(provider);
+		if (named === "lend-unnamed") throw new Error('Its judge lends a key without "lentAs": name the key it lends.');
+		if (named === "lent-as-core")
+			throw new Error(
+				`Its judge's "lentAs" "${String(provider.lentAs)}" is a name Sonar lends itself (${CORE_LENT_NAMES.join(", ")}): name its key otherwise.`,
+			);
+		if (named) throw new Error(`Its judge's "lentAs" must have 2 to 40 characters: lower case letters, digits and "-".`);
 		judge = provider;
 	};
 	const start = async (run: () => void | Stop | Promise<void | Stop>) => {
@@ -174,7 +184,7 @@ function portsOf(provides: Manifest["provides"]) {
 			starting = false;
 		}
 	};
-	return { provide, start, judge: () => judge };
+	return { provide, start, judge: () => (judge ? checkedJudge(judge) : null) };
 }
 
 // Its settings, kept as JSON carries them.

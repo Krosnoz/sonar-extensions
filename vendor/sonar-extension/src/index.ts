@@ -1,5 +1,5 @@
 // The contract between Sonar and the extensions published outside its repository (./contract.ts, what Sonar measures in
-// ./measures.ts, the ports an extension fills in ./ports.ts), and the reading of
+// ./measures.ts, the ports an extension fills in ./ports.ts, what their judge may give in ./judge-answers.ts), and the reading of
 // their card (./manifest.ts), and the rules both sides apply (./rules.ts). No dependency: an extension's author may read
 // it without the rest of Sonar. Its testing kit is apart, at @sonar/extension/testing (./testing.ts).
 
@@ -45,6 +45,22 @@ export {
 } from "./measures";
 export { type ManifestReading, readManifest, type Refusal, RESERVED_IDS } from "./manifest";
 export { type JudgedSession, type JudgeProvider, type JudgeRoute, type Port } from "./ports";
+export {
+	askYesOrNo,
+	cannotRead,
+	CORE_LENT_NAMES,
+	judgeRefusal,
+	judgmentOf,
+	keptJudge,
+	lentKeyOf,
+	messageSentences,
+	pairScoresOf,
+	probabilityOf,
+	RELAYED_LENT_NAME,
+	routeOf,
+	topicOf,
+	URGENCY_MOST,
+} from "./judge-answers";
 export {
 	CORE_SCREENS,
 	declaredOnly,
