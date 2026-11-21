@@ -16,14 +16,14 @@ Each judgment is one call to TypeSafe's System One API, model `jev-latest`, as S
 
 | Call | Question | Read as |
 | --- | --- | --- |
-| `judge` | the urgency (a score), and which sentence of the message sums it up (a choice among its last 40 sentences, or none) | `{ urgency, status }`: 0 and `""` when Jev gives none, or a sentence it was not offered |
+| `judge` | the urgency (a score), and which sentence of the message sums it up (a choice among its last 40 sentences as Sonar cuts them, or none) | `{ urgency, status }`: 0 and `""` when Jev gives none, or a sentence it was not offered |
 | `stillRelevant` | does your answer still fit the agent's message now (yes or no) | its probability, 0 when missing |
 | `isCorrection` | does the new dictation correct the request under way | its probability, 0 when missing |
 | `relatedPairs` | for each pair, do both agents work on the same thing | one probability per pair; no call without a pair |
 | `chooseTopic` | which candidate is the session's topic, or none | the candidate's key; null for none, a choice it was not offered, or a confidence under 0.6 |
 | `route` | what the sentence asks (open, next, fit or anything else), which agent it names, and whether it answers the agent last heard | `{ intent, target, confidence, reply, ms }`: an intent it was not offered goes to Ping |
 | `yesOrNo` | the end-of-turn check's question, on the agent's last message | its probability; 0 when TypeSafe refuses |
-| `lend` | | your key while Jev is on, else null: Sonar lends it with a session it runs on a linked computer |
+| `lend` | | your key while Jev is on, else null: Sonar lends it, under the name `typesafe` (`lentAs`), with a session it runs on a linked computer; a key with a space inside or over 512 characters lends nothing |
 
 Switched off, without a key, at its cap or out of credits, a call rejects with an Error bearing `off: true`: Sonar's judge does without it, as with no judge at all. A refusal of TypeSafe, a network error or an answer it cannot read rejects with a plain Error, which Sonar logs.
 

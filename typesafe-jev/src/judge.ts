@@ -2,7 +2,7 @@
 // Switched off, without a key, at its cap or out of credits, a call rejects with an Error bearing `off: true`, which the
 // core reads as "judge off": it does without the answer.
 
-import type { JudgeProvider, ServerApi } from "@sonar/extension";
+import { type JudgeProvider, lentKeyOf, type ServerApi } from "@sonar/extension";
 import { spentThisMonth } from "./cost";
 import * as questions from "./questions";
 import { type JevSettings, readSettings } from "./settings";
@@ -76,6 +76,8 @@ export function jevJudge(api: ServerApi, options: JevOptions, usage: Usage): Jud
 			const answer = (reply as { answers?: Record<string, { noul?: unknown } | undefined> } | null)?.answers?.[questionKey]?.noul;
 			return typeof answer === "number" ? answer : 0;
 		},
-		lend: async () => ((await readSettings(api)).on ? key() : null),
+		// A key Sonar would not lend (a space inside, over 512 characters) lends nothing.
+		lend: async () => ((await readSettings(api)).on ? (lentKeyOf(await key()) ?? null) : null),
+		lentAs: TYPESAFE_KEY,
 	};
 }

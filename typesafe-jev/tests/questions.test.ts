@@ -38,6 +38,13 @@ test("a judgment Jev leaves out: no urgency, and no sentence for none or a choic
 	expect(await judge.judge("Billing", MESSAGE)).toEqual({ urgency: 0, status: "" });
 });
 
+test("a message with a bullet: Jev picks among the sentences as Sonar cuts them, and Sonar shows the one it picks", async () => {
+	const { judge } = await started(typesafe);
+	typesafe.answer = answering(() => ({ urgency: { score: 1 }, status: { choice: "s1" } }));
+	expect(await judge.judge("Billing", "Merged.\n- Everything passes.")).toEqual({ urgency: 1, status: "Everything passes." });
+	expect(typesafe.asked[0]?.state["sentences"]).toEqual({ s0: "Merged.", s1: "Everything passes." });
+});
+
 test("freshness, correction, pairs, a topic among the candidates when Jev is sure, a route", async () => {
 	const { judge } = await started(typesafe);
 	typesafe.answer = answering(({ questions, state }) => {

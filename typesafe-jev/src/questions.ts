@@ -2,9 +2,8 @@
 // sums it up, whether a reply is still fresh, whether a dictation corrects the request before it, which agents work on
 // the same thing, a session's topic, and where a sentence said to the orb goes. As Sonar's plugin asked and read them.
 
-import type { JudgedSession, JudgeRoute } from "@sonar/extension";
+import { type JudgedSession, type JudgeRoute, messageSentences } from "@sonar/extension";
 import { jevTexts } from "./i18n-questions";
-import { sentencesOf } from "./sentences";
 import type { Answers } from "./typesafe";
 
 // One call to Jev, metered and within its budget: its answers only.
@@ -17,8 +16,9 @@ export const atStart = (name: string) => name.charAt(0).toUpperCase() + name.sli
 const isCriterion = <K extends string>(criteria: Record<K, string>, choice: string | undefined): choice is K =>
 	choice !== undefined && Object.hasOwn(criteria, choice);
 
+// The sentences offered are the message's as Sonar cuts them: the one Jev picks is one Sonar shows.
 export async function judge(ask: AskJev, user: string, agentName: string, message: string) {
-	const sentences: Record<string, string> = Object.fromEntries(sentencesOf(message).map((sentence, i) => [`s${i}`, sentence]));
+	const sentences: Record<string, string> = Object.fromEntries(messageSentences(message).map((sentence, i) => [`s${i}`, sentence]));
 	const texts = jevTexts.judge(user);
 	const questions: Record<string, unknown> = {
 		urgency: { type: "score", ...texts.urgency },

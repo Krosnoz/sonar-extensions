@@ -19,7 +19,8 @@ export type Pose = {
 
 export type Started = { readonly bench: Bench; readonly judge: JudgeProvider; readonly clock: { now: number }; readonly stop: () => void };
 
-// A new bench, its key "test-key" unless `pose` says otherwise, the user named "alex".
+// A new bench, its key "test-key" unless `pose` says otherwise, the user named "alex". `judge` is the kit's, called as
+// Sonar calls it: an answer Sonar would refuse fails the test.
 export async function started(typesafe: FakeTypeSafe, pose: Pose = {}): Promise<Started> {
 	const bench = fakeServer({
 		card,

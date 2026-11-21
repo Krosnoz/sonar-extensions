@@ -81,6 +81,13 @@ test("the key lent to a linked computer: the one here while Jev is on", async ()
 	expect(await judge.lend?.()).toBeNull();
 });
 
+test("the key is lent under TypeSafe's name; a key Sonar would not lend lends nothing", async () => {
+	const { judge } = await started(typesafe);
+	expect(judge.lentAs).toBe("typesafe");
+	for (const key of ["ts secret", "x".repeat(513)]) expect(await (await started(typesafe, { key })).judge.lend?.()).toBeNull();
+	expect(await (await started(typesafe, { key: "x".repeat(512) })).judge.lend?.()).toBe("x".repeat(512));
+});
+
 test("on again, Jev judges again", async () => {
 	const { bench, judge } = await started(typesafe, { settings: { on: false } });
 	await expect(judge.isCorrection("a", "b")).rejects.toMatchObject({ off: true });
