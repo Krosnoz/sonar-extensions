@@ -3,6 +3,7 @@
 // by itself moves the switch, without a new page.
 
 import type { Json, PageApi } from "@sonar/extension";
+import { newest } from "./newest";
 
 export type JevView = { readonly on: boolean; readonly key: string | null };
 export type SettingsHub = ReturnType<typeof settingsHub>;
@@ -15,10 +16,11 @@ const viewOf = (answer: Json): JevView => {
 
 export function settingsHub(api: PageApi) {
 	const heard = new Set<(jev: JevView) => void>();
+	const readView = newest(async () => viewOf(await api.http.get("/settings")));
 	return {
 		// Rejects with the reason when the reading fails.
 		read: async (): Promise<JevView> => {
-			const jev = viewOf(await api.http.get("/settings"));
+			const jev = await readView();
 			for (const listen of heard) listen(jev);
 			return jev;
 		},
