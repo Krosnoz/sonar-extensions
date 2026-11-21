@@ -1,0 +1,13 @@
+{
+	"id": "typesafe-jev",
+	"name": "Jev",
+	"version": "0.1.0",
+	"contract": 1,
+	"description": "Jev, TypeSafe's model, reads what your agents say: the sentence and urgency of their cards, which agents work on the same thing, a session's topic, where a spoken sentence goes, and the yes or no of the end-of-turn check.",
+	"server": "server.js",
+	"icon": "icon.svg",
+	"keys": [{ "name": "typesafe", "scope": "user", "label": "TypeSafe" }],
+	"calls": ["api.typesafe.ai"],
+	"provides": ["judge"],
+	"paid": true
+}
