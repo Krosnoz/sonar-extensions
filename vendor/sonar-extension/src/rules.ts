@@ -2,6 +2,7 @@
 // with the kit meets in Sonar the refusals it met in its tests.
 
 import type { CoreScreen, PartPlaces, ReadFamily, ServerEvents } from "./contract";
+import type { Port } from "./ports";
 
 // What one live message may weigh, as JSON in its envelope { type: "ext", id, data }: the socket of a phone carries
 // every extension's.
@@ -81,6 +82,22 @@ export const isPartPlace = (screen: unknown, place: unknown): boolean =>
 // screen that says more, as the statistics' "See the trust", or a line of every project's that opens the project's own.
 export const CORE_SCREENS: readonly CoreScreen[] = ["trust", "project-statistics"];
 export const isCoreScreen = (name: unknown): name is CoreScreen => CORE_SCREENS.some((each) => each === name);
+
+// The ports of the core a card may declare it fills (Manifest.provides of ./contract.ts).
+export const PORTS: readonly Port[] = ["judge"];
+export const isPort = (value: unknown): value is Port => PORTS.some((each) => each === value);
+
+// Why an extension may not fill `port` now (ServerApi's provide of ./contract.ts): its card does not declare it, its
+// start ended, or it filled it already; null when it may.
+export const provideRefusal = (
+	provides: readonly Port[] | undefined,
+	port: Port,
+	starting: boolean,
+	filled: boolean,
+): "undeclared" | "late" | "twice" | null => (!provides?.includes(port) ? "undeclared" : !starting ? "late" : filled ? "twice" : null);
+
+// Whether a port's call failed as "off" (./ports.ts): the core then does without the answer, as with no extension.
+export const isOff = (error: unknown): boolean => typeof error === "object" && error !== null && "off" in error && error.off === true;
 
 // What a route that throws answers: 500, unless the extension gave its Error a status from 400 to 499.
 export const routeStatus = (error: unknown): number => {

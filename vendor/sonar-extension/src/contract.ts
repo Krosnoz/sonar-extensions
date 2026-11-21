@@ -8,8 +8,9 @@
 //
 // A session has two names. `handle` ("s-…") is the name Sonar gives a session while it is open; `sessionId` is its
 // agent's own id (its transcript's), which outlives the handle, and the one every read of what Sonar measures gives.
-// What Sonar measures has its types in ./measures.ts.
+// What Sonar measures has its types in ./measures.ts; the ports an extension fills, in ./ports.ts.
 
+import type { JudgeProvider, Port } from "./ports";
 import type {
 	ClosedSession,
 	Covered,
@@ -61,6 +62,8 @@ export type Manifest = {
 	// What it reads of what Sonar measures, told to the user before it is installed: a read of a family it does not
 	// declare throws. It informs the user, it is no barrier: the extension runs in Sonar's process.
 	readonly reads?: readonly ReadFamily[];
+	// The ports of the core it fills (ServerApi's provide), told to the user before it is installed.
+	readonly provides?: readonly Port[];
 };
 
 // --- The server's side: `export function start(api)` of the file `server` names. ---
@@ -117,6 +120,8 @@ export type ServerApi = {
 	readonly id: string;
 	// The language the user reads: the extension brings its own texts.
 	readonly language: () => "en" | "fr";
+	// The user's name, as Sonar's settings give it.
+	readonly userName: () => string;
 	// A line in Sonar's log, under the extension's id.
 	readonly log: (message: string) => void;
 	// A folder of its own, kept between versions, for what it stores: made when it is first read.
@@ -167,6 +172,9 @@ export type ServerApi = {
 	// Returns what stops the listening. Throws for an event the core does not tell, or one of a family its card does not
 	// declare (`sessions` for "session-closed": sessions.closed gives the same).
 	readonly on: <Name extends keyof ServerEvents>(event: Name, listen: (data: ServerEvents[Name]) => void) => () => void;
+	// Fills a port of the core (./ports.ts), during its start only. Throws for a port its card does not declare
+	// (`provides`), one it filled already, or once its start ended.
+	readonly provide: { readonly judge: (provider: JudgeProvider) => void };
 };
 
 // What `start` may return: called once when the server stops.

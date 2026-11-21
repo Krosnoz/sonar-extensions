@@ -9,11 +9,12 @@
 import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { AgentTool, Json, Manifest, ProjectLine, RouteHandler, RouteRequest, ServerApi, ServerEvents, SessionLine } from "./contract";
+import type { AgentTool, Json, Manifest, ProjectLine, RouteHandler, RouteRequest, ServerApi, ServerEntry, ServerEvents, SessionLine, Stop } from "./contract";
 import { readManifest } from "./manifest";
 import type { ClosedSession } from "./measures";
+import type { JudgeProvider } from "./ports";
 import { type Measures, measuresOf, notDeclared } from "./testing-measures";
-import { eventRefusal, isToolFullName, isToolName, LIVE_MOST, routeStatus, SERVER_EVENTS, TOOL_FULL_NAME_MOST, wrongToolField } from "./rules";
+import { eventRefusal, isToolFullName, isToolName, LIVE_MOST, provideRefusal, routeStatus, SERVER_EVENTS, TOOL_FULL_NAME_MOST, wrongToolField } from "./rules";
 
 export type Answer = { readonly status: number; readonly body: Json };
 export type ToolAnswer = { readonly text: string; readonly isError: boolean };
@@ -40,10 +41,21 @@ export type Bench = {
 	// Its tools by their full name (<id>_<name>), and an agent's call of one.
 	readonly tools: () => readonly { readonly name: string; readonly readOnly: boolean }[];
 	readonly call: (name: string, input: Json, caller?: ToolCaller) => Promise<ToolAnswer>;
+	// Runs its `start` with `api`, as Sonar does: once it ended, `provide` throws. Returns what `start` returned.
+	readonly start: (start: ServerEntry["start"]) => Promise<void | Stop>;
+	// The judge it gave (`provide.judge`), as Sonar would call it; null while it gave none.
+	readonly judge: () => JudgeProvider | null;
 };
 
 // `card`: its extension.json as read; refused, the bench throws why. `dataDir`: a new temporary folder by default.
-export type BenchOptions = { readonly card: unknown; readonly language?: "en" | "fr"; readonly dataDir?: string; readonly settings?: Json };
+// `userName`: "the user" by default.
+export type BenchOptions = {
+	readonly card: unknown;
+	readonly language?: "en" | "fr";
+	readonly dataDir?: string;
+	readonly settings?: Json;
+	readonly userName?: string;
+};
 
 const messageOf = (error: unknown) => (error instanceof Error ? error.message : String(error));
 // As JSON carries it between the page and Sonar.
@@ -143,6 +155,39 @@ function eventsOf(log: string[], reads: Manifest["reads"], closed: ClosedSession
 	return { emit, on };
 }
 
+// The ports it fills, refused as Sonar refuses them: a port its card does not declare, one filled twice, or once its
+// start ended. Until a test starts it through the bench, its start counts as under way.
+function portsOf(provides: Manifest["provides"]) {
+	let starting = true;
+	let judge: JudgeProvider | null = null;
+	const provide = (provider: JudgeProvider) => {
+		const refusal = provideRefusal(provides, "judge", starting, judge !== null);
+		if (refusal === "undeclared") throw new Error(`Its card does not declare the port "judge": add "judge" to its "provides".`);
+		if (refusal === "late") throw new Error(`The port "judge" is filled during its start only.`);
+		if (refusal === "twice") throw new Error(`It already fills the port "judge".`);
+		judge = provider;
+	};
+	const start = async (run: () => void | Stop | Promise<void | Stop>) => {
+		try {
+			return await run();
+		} finally {
+			starting = false;
+		}
+	};
+	return { provide, start, judge: () => judge };
+}
+
+// Its settings, kept as JSON carries them.
+function settingsOf(saved: Json): ServerApi["settings"] {
+	let settings = saved;
+	return {
+		read: async () => settings,
+		write: async (value) => {
+			settings = asJson(value);
+		},
+	};
+}
+
 export function fakeServer(options: BenchOptions): Bench {
 	const reading = readManifest(options.card);
 	if ("refusal" in reading) throw new Error(`Its card is refused: ${JSON.stringify(reading.refusal)}`);
@@ -158,11 +203,12 @@ export function fakeServer(options: BenchOptions): Bench {
 	const measures = measuresOf(manifest.reads);
 	const events = eventsOf(log, manifest.reads, measures.bench.closed);
 	const { trust, closed, ...reads } = measures.api;
-	let settings = options.settings ?? null;
+	const ports = portsOf(manifest.provides);
 	const api: ServerApi = {
 		contract: manifest.contract,
 		id,
 		language: () => options.language ?? "en",
+		userName: () => options.userName ?? "the user",
 		log: (message) => void log.push(message),
 		dataDir: options.dataDir ?? mkdtempSync(join(tmpdir(), `${id}-`)),
 		routes: { get: route(routes.get), post: route(routes.post) },
@@ -173,18 +219,14 @@ export function fakeServer(options: BenchOptions): Bench {
 				live.push(asJson(data));
 			},
 		},
-		settings: {
-			read: async () => settings,
-			write: async (value) => {
-				settings = asJson(value);
-			},
-		},
+		settings: settingsOf(options.settings ?? null),
 		keys: { read: keys.read },
 		tools: { add: tools.add },
 		sessions: { list: async () => [...sessions], closed },
 		projects: { list: async () => [...projects], trust },
 		...reads,
 		on: events.on,
+		provide: { judge: ports.provide },
 	};
 	return {
 		api,
@@ -199,5 +241,7 @@ export function fakeServer(options: BenchOptions): Bench {
 		measures: measures.bench,
 		tools: tools.list,
 		call: tools.call,
+		start: (start) => ports.start(() => start(api)),
+		judge: ports.judge,
 	};
 }

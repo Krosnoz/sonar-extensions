@@ -3,7 +3,8 @@
 // with its reason, as data: the core says the reason in the user's language.
 
 import { CONTRACT, type Manifest, type ManifestKey, type ReadFamily } from "./contract";
-import { isReadFamily } from "./rules";
+import type { Port } from "./ports";
+import { isPort, isReadFamily } from "./rules";
 
 // The ids an extension never takes: the core's words (its routes and files live under /api/ext/<id> and /ext/<id>),
 // then the ids of the plugins Sonar ships. Written here, so that this package depends on nothing: a test of Sonar's
@@ -38,7 +39,9 @@ export type Refusal =
 	// An icon that is not an image the page masks (ICON).
 	| { readonly kind: "icon"; readonly path: string }
 	// A read that is not a family of what Sonar measures (READ_FAMILIES of ./rules.ts).
-	| { readonly kind: "read"; readonly read: string };
+	| { readonly kind: "read"; readonly read: string }
+	// A port that is not one of the core's (PORTS of ./rules.ts).
+	| { readonly kind: "provide"; readonly provide: string };
 
 export type ManifestReading = { readonly manifest: Manifest } | { readonly refusal: Refusal };
 
@@ -63,6 +66,7 @@ const isRelative = (path: string) =>
 
 const isKeys = (value: unknown): value is readonly ManifestKey[] => Array.isArray(value) && value.every(isKey);
 const isReads = (value: unknown): value is readonly ReadFamily[] => Array.isArray(value) && value.every(isReadFamily);
+const isProvides = (value: unknown): value is readonly Port[] => Array.isArray(value) && value.every(isPort);
 const orAbsent = (check: (value: unknown) => boolean) => (value: unknown) => value === undefined || check(value);
 // The fields beside the id and the contract, each with its check: the first that fails is named.
 const CHECKS: readonly (readonly [string, (value: unknown) => boolean])[] = [
@@ -73,6 +77,7 @@ const CHECKS: readonly (readonly [string, (value: unknown) => boolean])[] = [
 	["calls", orAbsent(isTexts)],
 	["paid", orAbsent((value) => typeof value === "boolean")],
 	["reads", orAbsent(isTexts)],
+	["provides", orAbsent(isTexts)],
 	...FILES.map((field) => [field, orAbsent(isText)] as const),
 ];
 
@@ -90,16 +95,23 @@ export function readManifest(value: unknown): ManifestReading {
 		const path = value[field];
 		if (typeof path === "string" && !isRelative(path)) return { refusal: { kind: "path", field, path } };
 	}
-	const { icon, reads } = value;
+	const { icon } = value;
 	if (typeof icon === "string" && !ICON.test(icon)) return { refusal: { kind: "icon", path: icon } };
-	const unknown = isTexts(reads) ? reads.find((read) => !isReadFamily(read)) : undefined;
-	if (unknown !== undefined) return { refusal: { kind: "read", read: unknown } };
-	return { manifest: taken(value, id, contract) };
+	const unknown = unknownDeclared(value);
+	return unknown ? { refusal: unknown } : { manifest: taken(value, id, contract) };
+}
+
+// The first read or port the card declares that the core does not know, named; null when it knows them all.
+function unknownDeclared({ reads, provides }: Fields): Refusal | null {
+	const read = isTexts(reads) ? reads.find((each) => !isReadFamily(each)) : undefined;
+	if (read !== undefined) return { kind: "read", read };
+	const port = isTexts(provides) ? provides.find((each) => !isPort(each)) : undefined;
+	return port === undefined ? null : { kind: "provide", provide: port };
 }
 
 // The card's fields once checked, those it does not know left out.
 function taken(fields: Fields, id: string, contract: number): Manifest {
-	const { name, version, description, icon, server, page, styles, keys, calls, paid, reads } = fields;
+	const { name, version, description, icon, server, page, styles, keys, calls, paid, reads, provides } = fields;
 	return {
 		id,
 		name: String(name),
@@ -114,5 +126,6 @@ function taken(fields: Fields, id: string, contract: number): Manifest {
 		...(isTexts(calls) ? { calls } : {}),
 		...(typeof paid === "boolean" ? { paid } : {}),
 		...(isReads(reads) ? { reads } : {}),
+		...(isProvides(provides) ? { provides } : {}),
 	};
 }
