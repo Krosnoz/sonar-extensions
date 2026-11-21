@@ -1,7 +1,7 @@
-// `bun run build`: writes dist/, the extension's folder as Sonar lays it (its card, its server entry bundled and its
-// icon), then release/, the two files of a GitHub release: extension.tar.gz (dist/ packed here) and extension.json (the
-// card, with the archive's SHA-256). Sonar builds nothing and installs no dependency: the entry is one file, its imports
-// bundled. Runs on Windows, macOS and Linux, without the system's tar.
+// `bun run build`: writes dist/, the extension's folder as Sonar lays it (its card, its entries bundled, its sheet and
+// its icon), then release/, the two files of a GitHub release: extension.tar.gz (dist/ packed here) and extension.json
+// (the card, with the archive's SHA-256). Sonar builds nothing and installs no dependency: each entry is one file, its
+// imports bundled. Runs on Windows, macOS and Linux, without the system's tar.
 
 import { copyFileSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
@@ -15,9 +15,15 @@ mkdirSync(release, { recursive: true });
 
 const card = JSON.parse(readFileSync(join(root, "extension.json"), "utf8"));
 
-// The server entry runs in Sonar's server (Bun): Node's modules stay imports. No page entry yet.
-const built = await Bun.build({ entrypoints: [join(root, "src/server.ts")], outdir: dist, target: "node", format: "esm" });
-if (!built.success) throw new AggregateError(built.logs, "Could not build src/server.ts");
+// The server entry runs in Sonar's server (Bun): Node's modules stay imports. The page entry runs in the browser.
+for (const [entry, target] of [
+	["src/server.ts", "node"],
+	["src/page.ts", "browser"],
+] as const) {
+	const built = await Bun.build({ entrypoints: [join(root, entry)], outdir: dist, target, format: "esm" });
+	if (!built.success) throw new AggregateError(built.logs, `Could not build ${entry}`);
+}
+copyFileSync(join(root, "src/page.css"), join(dist, card.styles));
 copyFileSync(join(root, "src/icon.svg"), join(dist, card.icon));
 writeFileSync(join(dist, "extension.json"), `${JSON.stringify(card, null, "\t")}\n`);
 

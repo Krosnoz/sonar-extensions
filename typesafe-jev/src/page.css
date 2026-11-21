@@ -1,0 +1,27 @@
+/* Jev's own classes (src/page/), drawn in Sonar's Services with Sonar's tokens, spaced as Sonar's plugin `jev` spaced its
+   part: the switch, then the period, the tile of what it cost, the chart by day and the price. This sheet reaches Sonar's
+   whole page: it styles the extension's classes only. */
+.jev-part { display: flex; flex-direction: column; gap: var(--space-4); }
+/* Without its key, greyed: Jev is not called. */
+.jev-part.no-key { opacity: var(--disabled); }
+.jev-usage { margin-top: var(--space-1); }
+.jev-usage > .ui-seg { margin-bottom: var(--space-3); }
+.jev-chart { margin: var(--space-5) 0; }
+
+/* A bar a day, rounded on top, 2 px apart. A bar is sized once, as its chart is drawn: a scale would stretch its dots and
+   its rounded top. A day of the past is a light tint in its frame with a grid of the accent's dots (squares of 2 px
+   every 4 px), today and the bar read stay whole. */
+.jev-bars { position: relative; display: flex; align-items: flex-end; gap: 2px; height: 96px; margin-top: calc(var(--space-2) + 22px); padding: 0 2px var(--space-5); border-bottom: 1px solid var(--hairline); }
+.jev-bars:focus-visible { outline: var(--focus-width) solid var(--focus-color); outline-offset: var(--focus-offset); }
+.jev-bar { position: relative; display: flex; flex: 1; flex-direction: column; justify-content: flex-end; height: 100%; cursor: default; transition: opacity var(--dur-state); }
+.jev-bar > i { display: block; height: calc(var(--v, 0) * 100%); border-radius: var(--radius-xs) var(--radius-xs) 0 0; background: color-mix(in srgb, var(--accent) 55%, var(--surface)); }
+.jev-bar:not(.now, .on, :hover) > i { background: conic-gradient(from 90deg at 2px 2px, color-mix(in srgb, var(--accent) 75%, var(--surface)) 25%, transparent 0) left -1px bottom 1px / 4px 4px, color-mix(in srgb, var(--accent) 16%, var(--surface)); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 45%, transparent); }
+.jev-bar.now > i { background: var(--accent); }
+.jev-bar.on > i { background: var(--ink); }
+@media (hover: hover) and (pointer: fine) { .jev-bar:hover > i { background: var(--ink); } }
+.jev-bars.picked > .jev-bar:not(.on) { opacity: 0.35; }
+.jev-tick { position: absolute; bottom: calc(-1 * var(--space-5)); left: 0; font-size: var(--text-2xs); color: var(--ink-soft); white-space: nowrap; }
+/* Over the chart: the day and the exact amount of the bar read. */
+.jev-reading { position: absolute; right: 0; bottom: calc(100% + var(--space-2)); left: 0; display: flex; gap: var(--space-3); align-items: baseline; justify-content: space-between; font: var(--text-sm)/1.3 var(--sans); color: var(--ink-soft); pointer-events: none; }
+.jev-reading > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.jev-reading > b { flex: none; font: 600 var(--text-md)/1 var(--sans); font-variant-numeric: tabular-nums; color: var(--ink); }

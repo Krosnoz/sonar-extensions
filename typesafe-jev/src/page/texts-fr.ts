@@ -1,0 +1,23 @@
+// The page's texts in French: those of Sonar's plugin `jev` in French. Their English is in ./texts.ts.
+
+import type { Texts } from "./texts";
+
+export const french: Texts = {
+	jevOn: "Jev actif",
+	jevNeedsKey: "Jev demande une clé TypeSafe",
+	periods: { "1": "Aujourd'hui", "7": "7 jours", "30": "30 jours" },
+	cost: "Jev · jugements",
+	costHint: (calls: string, tokens: string, estimated: boolean) => `${calls} appels · ${tokens} tokens${estimated ? " · en partie estimé" : ""}`,
+	perDay: (max: string) => `Par jour · max ${max}`,
+	price: "Jev à 0,042 $ le million de tokens d'entrée, relevés à chaque appel.",
+	barSaid: (label: string, value: string) => `${label} : ${value}`,
+	note: {
+		// No-break spaces inside the quotes, as French writes them.
+		body: "Sans clé TypeSafe, les décisions arrivent dans l'ordre. La carte ne montre ni urgence ni liens « même sujet ».",
+		open: "Ouvrir Services",
+	},
+	stopped: {
+		cap: (usd: number) => `Jev est coupé : il a coûté ${usd} $ ce mois-ci, son plafond. Réglage jevMonthlyUsd.`,
+		credits: "Jev est coupé : TypeSafe n'a plus de crédits. Rallume-le après la recharge.",
+	},
+};

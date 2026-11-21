@@ -2,7 +2,17 @@
 
 Jev, TypeSafe's model, reads what your agents say and judges it for Sonar: whether an agent waits for you, how urgently, and which of its sentences its card shows; whether your answer still fits what the agent says now; whether a dictation corrects the request before it; which agents work on the same thing; a session's topic; where a sentence said to the orb goes; and the yes or no of the end-of-turn check. It fills Sonar's judge (the port `judge`), in place of Sonar's plugin `jev`, with the same questions and the same readings of the answers.
 
-It has a server part only. It goes through the extension contract alone: it imports nothing of Sonar, and has no dependency when it runs. Its settings screen comes in a later version: until then, its settings go through its routes (below).
+It goes through the extension contract alone: it imports nothing of Sonar, and has no dependency when it runs.
+
+## What its page shows
+
+The same screens as Sonar's plugin, in your language:
+
+- In Settings › Services, in the group of its TypeSafe key, after the key: the switch "Jev on", then its usage over today, 7 or 30 days (the period is kept in your browser): what its judgments cost, its calls and tokens ("partly estimated" when a call's tokens were not said), a bar a day over 7 or 30 days when a day cost something (its exact amount over the chart, for the bar under the pointer, touched, or chosen with the arrow keys), and its price. Without a key, the part is greyed and the switch held off, its tip saying Jev needs a key. A switch TypeSafe refuses to save goes back, and Sonar says "Settings not saved.". A reading that fails is said in its place, with "Retry".
+- At the top of the Agents tab, while TypeSafe has no key: a note on what that changes, with "Open Services". Its × hides it in this browser for good; it goes once the key is given, and comes back if the key is removed.
+- When Jev switches itself off, at its cap or out of credits: the plugin's words in a brief error message, and its switch turns off without a new page.
+
+The chart is the extension's own (`src/page/chart.ts`, `src/page.css`), drawn with Sonar's tokens; the switch, the note, the period's choice, the reading that failed and the brief message are Sonar's own parts (`api.ui`).
 
 ## What it needs, and what it costs
 
@@ -71,9 +81,9 @@ Its settings, `{ "on": true, "monthlyUsd": 2 }`, are in Sonar's settings file, u
 ## Develop it
 
 1. `bun install`, then `bun run check` (the types) and `bun test`.
-2. `bun run build` writes `dist/` (the extension's folder: its card, `server.js` bundled, and `icon.svg`) and `release/` (`extension.json` with the archive's SHA-256, and `extension.tar.gz`).
+2. `bun run build` writes `dist/` (the extension's folder: its card, `server.js` and `page.js` bundled, `page.css` and `icon.svg`) and `release/` (`extension.json` with the archive's SHA-256, and `extension.tar.gz`).
 
-The tests run the server entry on the contract's testing kit (`@sonar/extension/testing`), without Sonar, against a fake TypeSafe on a local port ([`tests/fake-typesafe.ts`](tests/fake-typesafe.ts)), with a clock they set. They never call TypeSafe. The contract is not on npm yet: the repository's one copy lives in [`../vendor/`](../vendor/README.md).
+The tests run the server entry on the contract's testing kit (`@sonar/extension/testing`), without Sonar, against a fake TypeSafe on a local port ([`tests/fake-typesafe.ts`](tests/fake-typesafe.ts)), with a clock they set. They never call TypeSafe. The page has no kit: its tests check what it computes and says (`tests/page-figures.test.ts`, `tests/page-texts.test.ts`), and run its entry on a fake page that applies the contract's rules of places and toasts (`isPartPlace`, `toastRefusal`, `toastPace`) (`tests/page-start.test.ts`). The contract is not on npm yet: the repository's one copy lives in [`../vendor/`](../vendor/README.md).
 
 ## Install it in Sonar
 
