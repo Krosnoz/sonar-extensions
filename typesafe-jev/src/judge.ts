@@ -7,7 +7,7 @@ import { spentThisMonth } from "./cost";
 import * as questions from "./questions";
 import { type JevSettings, readSettings } from "./settings";
 import { jevStopped } from "./stopped";
-import { askTypeSafe, OutOfCredits, systemOne } from "./typesafe";
+import { askTypeSafe, held, OutOfCredits, systemOne } from "./typesafe";
 import type { Usage } from "./usage";
 
 export type JevOptions = { readonly url: string; readonly now: () => number };
@@ -74,7 +74,7 @@ export function jevJudge(api: ServerApi, options: JevOptions, usage: Usage): Jud
 			if (!response.ok) return 0;
 			const reply: unknown = await response.json();
 			const answer = (reply as { answers?: Record<string, { noul?: unknown } | undefined> } | null)?.answers?.[questionKey]?.noul;
-			return typeof answer === "number" ? answer : 0;
+			return typeof answer === "number" ? held(answer) : 0;
 		},
 		// A key Sonar would not lend (a space inside, over 512 characters) lends nothing.
 		lend: async () => ((await readSettings(api)).on ? (lentKeyOf(await key()) ?? null) : null),

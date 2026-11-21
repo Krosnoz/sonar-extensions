@@ -108,6 +108,24 @@ test("a route without a last speaker asks no reply; an intent Jev does not give 
 	expect(Object.keys(typesafe.asked[0]?.questions ?? {})).toEqual(["intent", "target"]);
 });
 
+test("a value TypeSafe sends past its bounds is held to them: Sonar reads the answer, and does not refuse it", async () => {
+	const { judge } = await started(typesafe);
+	typesafe.answer = answering(({ questions }) => {
+		if (questions["urgency"]) return { urgency: { score: 2.4 }, status: { choice: "s0" } };
+		if (questions["fresh"]) return { fresh: { noul: 1.02 } };
+		if (questions["correction"]) return { correction: { noul: -0.1 } };
+		if (questions["p0"]) return { p0: { noul: 1.5 } };
+		if (questions["ended"]) return { ended: { noul: 1.3 } };
+		return { intent: { choice: "open", confidence: 1.01 }, target: { choice: "a0" }, reply: { noul: -0.2 } };
+	});
+	expect(await judge.judge("Billing", MESSAGE)).toMatchObject({ urgency: 2 });
+	expect(await judge.stillRelevant("oui", "Je merge ?", "J'ai mergé.")).toBe(1);
+	expect(await judge.isCorrection("résume la PR", "non, arrête")).toBe(0);
+	expect(await judge.relatedPairs([[{ name: "A", summary: "billing" }, { name: "B", summary: "billing" }]])).toEqual([1]);
+	expect(await judge.route("montre A", ["A"], { who: "A", text: "Je merge ?" })).toMatchObject({ confidence: 1, reply: 0 });
+	expect(await judge.yesOrNo("Done.", "ended", { instructions: "Did the agent end its work?", criteria: { true: "It did", false: "It did not" } })).toBe(1);
+});
+
 test("an answer TypeSafe sends malformed, or a refusal, fails as an error, not as Jev off", async () => {
 	const { judge } = await started(typesafe);
 	for (const reply of [{ answers: { correction: { noul: "high" } } }, { answers: [] }, { nothing: true }, { answers: {}, usage: { input_tokens: "10" } }]) {

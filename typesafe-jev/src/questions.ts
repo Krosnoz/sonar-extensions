@@ -2,9 +2,9 @@
 // sums it up, whether a reply is still fresh, whether a dictation corrects the request before it, which agents work on
 // the same thing, a session's topic, and where a sentence said to the orb goes. As Sonar's plugin asked and read them.
 
-import { type JudgedSession, type JudgeRoute, messageSentences } from "@sonar/extension";
+import { type JudgedSession, type JudgeRoute, messageSentences, URGENCY_MOST } from "@sonar/extension";
 import { jevTexts } from "./i18n-questions";
-import type { Answers } from "./typesafe";
+import { type Answers, held } from "./typesafe";
 
 // One call to Jev, metered and within its budget: its answers only.
 export type AskJev = (state: unknown, questions: Record<string, unknown>) => Promise<Answers>;
@@ -26,7 +26,7 @@ export async function judge(ask: AskJev, user: string, agentName: string, messag
 		status: { type: "choice", instructions: texts.status.instructions, criteria: { ...sentences, none: texts.status.none } },
 	};
 	const answers = await ask({ agent: agentName, message, sentences }, questions);
-	return { urgency: answers["urgency"]?.score ?? 0, status: sentences[answers["status"]?.choice ?? ""] ?? "" };
+	return { urgency: held(answers["urgency"]?.score ?? 0, URGENCY_MOST), status: sentences[answers["status"]?.choice ?? ""] ?? "" };
 }
 
 export async function stillRelevant(ask: AskJev, user: string, answer: string, question: string, current: string) {

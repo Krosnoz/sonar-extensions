@@ -35,13 +35,24 @@ const isAnswer = (value: unknown): value is Answer =>
 	isOptional(value["score"], "number") &&
 	isOptional(value["confidence"], "number");
 
+// A number held from 0 to `most`: Sonar refuses a judge's whole answer for one value past its bounds.
+export const held = (value: number, most = 1) => Math.min(Math.max(value, 0), most);
+
+// A probability (`noul`, `confidence`) is held from 0 to 1; a score's bounds are its question's, held where it is read.
+const bounded = (answer: Answer): Answer => ({
+	...answer,
+	...(answer.noul === undefined ? {} : { noul: held(answer.noul) }),
+	...(answer.confidence === undefined ? {} : { confidence: held(answer.confidence) }),
+});
+
 // TypeSafe's answers and the input tokens it billed (undefined when it did not say); undefined when unreadable.
 export function readReply(reply: unknown): { answers: Answers; tokens: number | undefined } | undefined {
 	if (!isFields(reply) || !isFields(reply["answers"]) || !Object.values(reply["answers"]).every(isAnswer)) return undefined;
 	const usage = reply["usage"];
 	if (usage !== undefined && !(isFields(usage) && isOptional(usage["input_tokens"], "number"))) return undefined;
 	const tokens = isFields(usage) && typeof usage["input_tokens"] === "number" ? usage["input_tokens"] : undefined;
-	return { answers: reply["answers"] as Answers, tokens };
+	const answers = Object.fromEntries(Object.entries(reply["answers"] as Answers).map(([key, answer]) => [key, bounded(answer)]));
+	return { answers, tokens };
 }
 
 // One call to Jev with `key`: its answers and the tokens it read. Fails with OutOfCredits on a 402, with an Error on any
