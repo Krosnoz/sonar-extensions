@@ -9,6 +9,18 @@ import type { Kit } from "./kit";
 import type { SettingsHub } from "./settings";
 
 const HIDDEN = "note-hidden";
+// Where Sonar's plugin kept its × in this browser. Read, so that a note hidden there stays hidden once the extension
+// takes over; never written: the extension keeps its own key, under the name Sonar gives it.
+const PLUGIN_HIDDEN = "sonar:typesafe-note";
+
+const hiddenByPlugin = (): boolean => {
+	try {
+		return globalThis.localStorage?.getItem(PLUGIN_HIDDEN) === "1";
+	} catch {
+		// The browser refuses its storage (private browsing, a setting): nothing kept, the note shows.
+		return false;
+	}
+};
 
 export function notePart(api: PageApi, kit: Kit, settings: SettingsHub): PartSlot {
 	return {
@@ -22,7 +34,7 @@ export function notePart(api: PageApi, kit: Kit, settings: SettingsHub): PartSlo
 			note.hidden = true;
 			node.append(note);
 			settings.hear((jev) => {
-				note.hidden = jev.key !== null || api.storage.read(HIDDEN) === "1";
+				note.hidden = jev.key !== null || api.storage.read(HIDDEN) === "1" || hiddenByPlugin();
 			});
 			// The Agents tab stays drawn: entered once, when the page starts.
 			return { enter: () => void settings.read().catch(() => undefined) };

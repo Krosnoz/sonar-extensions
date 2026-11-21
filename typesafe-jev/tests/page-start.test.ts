@@ -2,11 +2,31 @@
 // toasts are ones Sonar shows (toastRefusal, toastPace), and its note of the Agents tab comes and goes as Sonar's plugin's
 // (its jev/note.ts): shown while TypeSafe has no key, gone once the key is given, never back once its × hid it.
 
-import { beforeEach, expect, test } from "bun:test";
+import { afterEach, beforeEach, expect, test } from "bun:test";
 import { isPartPlace, type Json, type PageApi, type PartSlot, toastPace, toastRefusal } from "@sonar/extension";
 import { start } from "../src/page";
 
-type Note = { hidden: boolean; text: string; action?: { label: string; run: () => void }; close?: () => void };
+// `told`: how many times the page set `hidden`, a reading of the settings told to the note.
+type Note = { hidden: boolean; told: number; text: string; action?: { label: string; run: () => void }; close?: () => void };
+
+// The readings settle on the microtasks' turns: waits on a state, never on a time.
+async function until(state: () => boolean): Promise<void> {
+	for (let turn = 0; turn < 200 && !state(); turn++) await new Promise((done) => setImmediate(done));
+	expect(state()).toBe(true);
+}
+
+const fakeNote = (text: string, options: Omit<Note, "hidden" | "told" | "text">): Note => {
+	let hidden = false;
+	const note = { told: 0, text, ...options } as Note;
+	Object.defineProperty(note, "hidden", {
+		get: () => hidden,
+		set: (value: boolean) => {
+			hidden = value;
+			note.told++;
+		},
+	});
+	return note;
+};
 
 // A page as Sonar's gives it to the entry, with what the test reads back: the parts placed, the toasts shown, the
 // screens opened, the routes read, the browser's storage.
@@ -17,7 +37,8 @@ function fakePage(language: "en" | "fr") {
 	const reads: string[] = [];
 	const listeners: ((data: Json) => void)[] = [];
 	const stored = new Map<string, string>();
-	const settings = { value: { on: true, key: null as string | null, monthlyUsd: 2 } as Json };
+	// `down`: every reading fails; `failed`: how many did.
+	const settings = { value: { on: true, key: null as string | null, monthlyUsd: 2 } as Json, down: false, failed: 0 };
 	const pace = toastPace();
 	const refuse = () => {
 		throw new Error("not in this test");
@@ -41,11 +62,15 @@ function fakePage(language: "en" | "fr") {
 				if (refusal) throw new Error(refusal);
 				if (pace(Date.now())) toasts.push({ text, tone });
 			},
-			note: (text: string, options: Omit<Note, "hidden" | "text"> = {}) => ({ hidden: false, text, ...options }),
+			note: (text: string, options: Omit<Note, "hidden" | "told" | "text"> = {}) => fakeNote(text, options),
 		},
 		http: {
 			get: async (path: string) => {
 				reads.push(path);
+				if (settings.down) {
+					settings.failed++;
+					throw new Error("down");
+				}
 				return settings.value;
 			},
 			post: refuse,
@@ -70,9 +95,12 @@ async function agentsNote(page: ReturnType<typeof fakePage>): Promise<{ note: No
 	const kids: unknown[] = [];
 	const part = page.parts.find((each) => each.screen === "agents");
 	const shown = part?.mount({ append: (...nodes: unknown[]) => kids.push(...nodes) } as unknown as HTMLElement, {});
+	const told = () => (kids[0] as Note).told + page.settings.failed;
+	// Entered, it reads the settings: done once the reading is told to the note, or failed.
 	const enter = async () => {
+		const before = told();
 		shown?.enter?.();
-		await Bun.sleep(0);
+		await until(() => told() > before);
 	};
 	await enter();
 	return { note: kids[0] as Note, enter };
@@ -92,7 +120,6 @@ test("Jev off by itself: the plugin's words as an error toast, and its switch re
 	page.tell({ kind: "cap", usd: 2 });
 	page.tell({ kind: "credits" });
 	page.tell({ kind: "other" });
-	await Bun.sleep(0);
 	expect(page.toasts).toEqual([
 		{ text: "Jev is off: it cost $2 this month, its cap. Setting jevMonthlyUsd.", tone: "error" },
 		{ text: "Jev is off: TypeSafe has no credits left. Turn it on again after the top-up.", tone: "error" },
@@ -129,8 +156,7 @@ test("the key saved in Services while the note shows: the note goes without a ne
 	const { note } = await agentsNote(page);
 	page.settings.value = { on: false, key: "…1234", monthlyUsd: 2 };
 	page.tell({ kind: "credits" });
-	await Bun.sleep(0);
-	expect(note.hidden).toBe(true);
+	await until(() => note.hidden);
 });
 
 test("its × hides it on this browser for good", async () => {
@@ -145,9 +171,37 @@ test("its × hides it on this browser for good", async () => {
 	expect(note.hidden).toBe(true);
 });
 
+// The browser's own storage, where Sonar's plugin kept its × under "sonar:typesafe-note".
+const browserStorage = (kept: { [key: string]: string }) => {
+	const written: string[] = [];
+	const localStorage = { getItem: (key: string) => kept[key] ?? null, setItem: (key: string) => void written.push(key) };
+	return { localStorage, written };
+};
+afterEach(() => void Reflect.deleteProperty(globalThis, "localStorage"));
+
+test("hidden by the × of Sonar's plugin, the note stays hidden; that key is only read", async () => {
+	const browser = browserStorage({ "sonar:typesafe-note": "1" });
+	Object.assign(globalThis, { localStorage: browser.localStorage });
+	const { note } = await agentsNote(page);
+	expect(note.hidden).toBe(true);
+	note.close?.();
+	expect(browser.written).toEqual([]);
+});
+
+test("the browser refusing its storage, the note shows all the same", async () => {
+	Object.assign(globalThis, {
+		localStorage: {
+			getItem: () => {
+				throw new Error("refused");
+			},
+		},
+	});
+	expect((await agentsNote(page)).note.hidden).toBe(false);
+});
+
 test("a reading that fails leaves the note hidden, without a word", async () => {
 	const failing = fakePage("en");
-	(failing.api.http as unknown as { get: () => Promise<Json> }).get = () => Promise.reject(new Error("down"));
+	failing.settings.down = true;
 	start(failing.api);
 	const { note } = await agentsNote(failing);
 	expect(note.hidden).toBe(true);
