@@ -214,8 +214,8 @@ export type PartPlaces = {
 };
 // The tones of a toast (TOAST_TONES of ./rules.ts).
 export type ToastTone = "info" | "error";
-// The core's screens an extension's page shows by name (CORE_SCREENS of ./rules.ts).
-export type CoreScreen = "trust" | "project-statistics";
+// The core's screens an extension's page shows by name (CORE_SCREENS of ./rules.ts): a project's, or Sonar's Services.
+export type CoreScreen = "trust" | "project-statistics" | "services";
 
 export type PageSlots = {
 	// A screen of Sonar's settings, after the core's.
@@ -281,10 +281,16 @@ export type PageApi = {
 	// A value kept in this browser, under the extension's id.
 	readonly storage: { readonly read: (key: string) => string | null; readonly write: (key: string, value: string) => void };
 	// Shows one of its own screens by its title: a project's when `project` is given, else in the settings shown, or in
-	// those the page opens on its own project. Or a screen of the core's by its name (CORE_SCREENS of ./rules.ts), always
-	// a project's: in place when that project's settings show, else in its settings opened on it. Throws for a title it
-	// did not place, a name the core does not give, or a screen of the core's without its project.
-	readonly open: (screen: { readonly title: string; readonly project?: string } | { readonly core: CoreScreen; readonly project: string }) => void;
+	// those the page opens on its own project. Or a screen of the core's by its name (CORE_SCREENS of ./rules.ts): a
+	// project's in place when that project's settings show, else in its settings opened on it; Sonar's Services, where its
+	// keys are given, in the settings shown, else in those the page opens. Throws for a title it did not place, a name the
+	// core does not give, or a project's screen of the core's without its project.
+	readonly open: (
+		screen:
+			| { readonly title: string; readonly project?: string }
+			| { readonly core: Exclude<CoreScreen, "services">; readonly project: string }
+			| { readonly core: "services" },
+	) => void;
 };
 
 // Its start ends within 10 s, or the extension is cut for the page, as when it throws.

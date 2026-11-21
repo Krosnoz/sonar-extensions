@@ -104,9 +104,10 @@ export function toastPace(): (now: number) => boolean {
 }
 
 // The core's screens an extension's page shows by name (PageApi's `open` of ./contract.ts): "trust", a project's trust;
-// "project-statistics", a project's statistics (the screen of PART_PLACES). A link from its own blocks to the core's
-// screen that says more, as the statistics' "See the trust", or a line of every project's that opens the project's own.
-export const CORE_SCREENS: readonly CoreScreen[] = ["trust", "project-statistics"];
+// "project-statistics", a project's statistics (the screen of PART_PLACES); "services", Sonar's Services, where its keys
+// are given. A link from its own blocks to the core's screen that says more, as the statistics' "See the trust", a line
+// of every project's that opens the project's own, or a note that asks for its key.
+export const CORE_SCREENS: readonly CoreScreen[] = ["trust", "project-statistics", "services"];
 export const isCoreScreen = (name: unknown): name is CoreScreen => CORE_SCREENS.some((each) => each === name);
 
 // The ports of the core a card may declare it fills (Manifest.provides of ./contract.ts).
