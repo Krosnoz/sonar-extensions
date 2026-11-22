@@ -47,6 +47,11 @@ class Node {
 		next.parent = parent;
 		this.parent = null;
 	}
+	// false: not drawn, as in a folded group.
+	rendered = true;
+	checkVisibility(): boolean {
+		return this.rendered && (this.parent?.checkVisibility() ?? true);
+	}
 	get isConnected(): boolean {
 		return this.root || (this.parent?.isConnected ?? false);
 	}
@@ -150,6 +155,27 @@ beforeEach(() => {
 	globalThis.clearTimeout = ((id: number) => void timers.delete(id)) as typeof clearTimeout;
 });
 afterEach(() => Object.assign(globalThis, real));
+
+// The page's document: shown or hidden (another tab, the phone's screen off), and who listens to its change.
+const visibility = { state: "visible", listeners: new Set<() => void>() };
+beforeEach(() => {
+	visibility.state = "visible";
+	visibility.listeners.clear();
+	Object.assign(globalThis, {
+		document: {
+			get visibilityState() {
+				return visibility.state;
+			},
+			addEventListener: (type: string, listen: () => void) => type === "visibilitychange" && visibility.listeners.add(listen),
+			removeEventListener: (type: string, listen: () => void) => type === "visibilitychange" && visibility.listeners.delete(listen),
+		},
+	});
+});
+afterEach(() => void Reflect.deleteProperty(globalThis, "document"));
+const showPage = (state: "visible" | "hidden") => {
+	visibility.state = state;
+	for (const listen of [...visibility.listeners]) listen();
+};
 const tick = () => {
 	const due = [...timers.entries()];
 	timers.clear();
@@ -278,4 +304,45 @@ test("once it left, or its extension cut, nothing reads again and no timer stays
 	expect(page.pending.filter(({ path }) => path === "/usage")).toEqual([]);
 	expect(cut.pending).toEqual([]);
 	expect(timers.size).toBe(0);
+});
+
+test("the page hidden, nothing reads again and no timer waits; shown again, the usage is read at once", async () => {
+	const page = await entered();
+	showPage("hidden");
+	expect(timers.size).toBe(0);
+	tick();
+	expect(page.pending).toEqual([]);
+	showPage("visible");
+	expect(page.pending.map(({ path }) => path)).toEqual(["/usage"]);
+	answer(page, "/usage", oneDay(20));
+	await until(() => hintOf(page) === "20 calls · 20K tokens");
+	expect(timers.size).toBe(1);
+});
+
+test("entered while the page is hidden, it waits for the page to show before reading again", async () => {
+	visibility.state = "hidden";
+	const page = await entered();
+	expect(timers.size).toBe(0);
+	showPage("visible");
+	expect(page.pending.map(({ path }) => path)).toEqual(["/usage"]);
+});
+
+test("its group folded, a step reads nothing; unfolded, the next step reads", async () => {
+	const page = await entered();
+	page.jevPart().rendered = false;
+	tick();
+	for (let turn = 0; turn < 20; turn++) await new Promise((done) => setImmediate(done));
+	expect(page.pending).toEqual([]);
+	expect(timers.size).toBe(1);
+	page.jevPart().rendered = true;
+	tick();
+	expect(page.pending.map(({ path }) => path)).toEqual(["/usage"]);
+});
+
+test("once it left, it no longer listens to the page shown or hidden", async () => {
+	const page = await entered();
+	page.shown.leave?.();
+	expect(visibility.listeners.size).toBe(0);
+	page.shown.enter?.();
+	expect(visibility.listeners.size).toBe(1);
 });

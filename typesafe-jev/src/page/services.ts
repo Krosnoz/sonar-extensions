@@ -7,7 +7,8 @@
 // While the part shows, its usage is read again every 10 s, as the plugin's is drawn again at each usage Sonar sends,
 // and at once when Jev switches itself off: the cost changes in place, without the dots of a first reading. A step of
 // its own rather than a message of the server at each judgment: nothing is sent while no page shows the part, and it
-// stops once the part left, or once its node left the screen (its extension cut, without a leave).
+// stops once the part left, or once its node left the screen (its extension cut, without a leave). It waits while the
+// page is hidden, and reads at once when it shows again; a step reads nothing while the group is folded.
 
 import type { PageApi, PartSlot } from "@sonar/extension";
 import type { UsageReport } from "../cost";
@@ -90,34 +91,50 @@ export function servicesPart(api: PageApi, kit: Kit, settings: SettingsHub): Par
 			// From enter to leave; the steps go on while the first reading is still on its way.
 			let entered = false;
 			let timer: ReturnType<typeof setTimeout> | undefined;
-			const stop = () => {
-				entered = false;
+			const pause = () => {
 				clearTimeout(timer);
 				timer = undefined;
+			};
+			// The page hidden (another tab, the phone's screen off), no step waits; shown again, a reading at once.
+			const pageShown = () => globalThis.document?.visibilityState !== "hidden";
+			// Its own node not drawn: its group folded, or the settings closed. The contract does not tell a part its
+			// group's fold; the browser says whether the part's own node is drawn, without a look at the core's.
+			const drawn = () => typeof part.checkVisibility !== "function" || part.checkVisibility();
+			const stop = () => {
+				entered = false;
+				pause();
 				shown = null;
+				globalThis.document?.removeEventListener("visibilitychange", onVisibility);
 			};
 			// Read again in place; a failure keeps what shows, and the next step tries again.
 			const reread = async () => {
 				if (!entered) return;
 				if (!part.isConnected) return stop();
-				if (!shown) return;
+				if (!shown || !drawn()) return;
 				const report = await readUsage().catch(() => null);
 				const now = shown;
 				if (!report || !now || !now.place.isConnected || JSON.stringify(report) === now.drawn) return;
 				now.place.replaceChildren(...drawFigures(now.place, report));
 			};
 			const step = () => {
-				clearTimeout(timer);
+				pause();
+				if (!pageShown()) return;
 				timer = setTimeout(() => {
 					void reread().then(() => entered && step());
 				}, REREAD_MS);
 			};
+			function onVisibility() {
+				if (!pageShown()) return pause();
+				void reread();
+				step();
+			}
 			api.live.on((data) => {
 				if (stopText(data, kit.texts) !== null) void reread();
 			});
 			return {
 				enter: () => {
 					entered = true;
+					globalThis.document?.addEventListener("visibilitychange", onVisibility);
 					void ui.load(
 						part,
 						() => Promise.all([settings.read(), readUsage()]),
