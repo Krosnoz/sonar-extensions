@@ -11,7 +11,8 @@ export const SUMMARY_MOST = 200;
 // Why a key is asked, in the card of the key: where to find it and what it opens, two sentences. Longer, its card would
 // fill a phone's screen.
 export const KEY_WHY_MOST = 300;
-// A language's code, as the page names its language ("fr", "en").
+// A language's code, as the page names its language ("fr", "en"). Words under another code ("pt-BR") are left out,
+// unread: a later Sonar may read them under the same contract, and the card must still install on this one.
 const LANGUAGE = /^[a-z]{2}$/;
 const TRANSLATED = ["name", "summary", "description"] as const;
 const KEY_TRANSLATED = ["label", "why"] as const;
@@ -24,12 +25,14 @@ const textOrAbsent = (value: unknown) => value === undefined || isText(value);
 // What draws nothing: spaces, controls, format characters (zero width…), combining marks alone, and the letters that
 // are blank (the Hangul fillers, the empty braille cell).
 const BLANK = /[\p{White_Space}\p{Cc}\p{Cf}\p{Z}\p{M}ᅟᅠ⠀ㅤﾠ]/gu;
-// A name that signs: some character drawn, and not Sonar's, in any case or width ("Ｓｏｎａｒ"): its letters and digits
-// alone, its punctuation and spaces left out ("Sonar.", "S.O.N.A.R"). Letters of another script that look alike are not
-// told apart.
+// The names the core speaks with: Sonar signs its toasts, Ping its bubble, where `ui.say` signs an extension's words.
+const CORE_NAMES = new Set(["sonar", "ping"]);
+// A name that signs: some character drawn, and none of the core's, in any case or width ("Ｓｏｎａｒ"): its letters and
+// digits alone, its punctuation and spaces left out ("Sonar.", "P.I.N.G"). Letters of another script that look alike
+// are not told apart.
 export const signs = (name: string) => {
 	const drawn = name.normalize("NFKC");
-	return drawn.replace(BLANK, "") !== "" && drawn.replace(/[^\p{L}\p{N}]/gu, "").toLowerCase() !== "sonar";
+	return drawn.replace(BLANK, "") !== "" && !CORE_NAMES.has(drawn.replace(/[^\p{L}\p{N}]/gu, "").toLowerCase());
 };
 
 const tooLong = (field: string, text: unknown, most = SUMMARY_MOST): Refusal | null =>
@@ -50,14 +53,15 @@ function keysRefusal(at: string, keys: unknown, declared: readonly string[]): Re
 	return null;
 }
 
+const knownLanguages = (translations: Fields) => Object.entries(translations).filter(([language]) => LANGUAGE.test(language));
+
 function translationRefusal(language: string, words: unknown, declared: readonly string[]): Refusal | null {
-	if (!LANGUAGE.test(language)) return { kind: "language", language };
 	const at = `translations.${language}`;
 	if (!isFields(words)) return { kind: "field", field: at };
 	const wrong = TRANSLATED.find((field) => !textOrAbsent(words[field]));
 	if (wrong) return { kind: "field", field: `${at}.${wrong}` };
 	const { name, summary, keys } = words;
-	// Sonar signs its toasts with its name, in the page's language too.
+	// Sonar signs its toasts and Ping's bubble with its name, in the page's language too.
 	if (typeof name === "string" && !signs(name)) return { kind: "name", name };
 	return tooLong(`${at}.summary`, summary) ?? keysRefusal(`${at}.keys`, keys, declared);
 }
@@ -69,7 +73,7 @@ export function wordsRefusal({ summary, translations }: Fields, keys: readonly M
 		tooLong("summary", summary) ?? keys.reduce<Refusal | null>((found, key) => found ?? tooLong(`keys.${key.name}.why`, key.why, KEY_WHY_MOST), null);
 	if (long) return long;
 	const declared = keys.map((key) => key.name);
-	for (const [language, words] of Object.entries(isFields(translations) ? translations : {})) {
+	for (const [language, words] of knownLanguages(isFields(translations) ? translations : {})) {
 		const refusal = translationRefusal(language, words, declared);
 		if (refusal) return refusal;
 	}
@@ -82,7 +86,7 @@ const picked = (words: Fields, fields: readonly string[]) =>
 // The words of a card once checked, those it does not know left out.
 export function takenTranslations(translations: Fields): { readonly [language: string]: CardTranslation } {
 	return Object.fromEntries(
-		Object.entries(translations).map(([language, words]) => {
+		knownLanguages(translations).map(([language, words]) => {
 			const own = isFields(words) ? words : {};
 			const keys = isFields(own["keys"])
 				? Object.fromEntries(Object.entries(own["keys"]).map(([key, texts]) => [key, picked(isFields(texts) ? texts : {}, KEY_TRANSLATED)]))

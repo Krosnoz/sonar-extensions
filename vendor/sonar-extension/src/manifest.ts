@@ -45,12 +45,10 @@ export type Refusal =
 	| { readonly kind: "read"; readonly read: string }
 	// A port that is not one of the core's (PORTS of ./rules.ts).
 	| { readonly kind: "provide"; readonly provide: string }
-	// A name Sonar cannot sign its toasts with (`ui.toast` of ./contract.ts): without a visible character, or Sonar's.
+	// A name Sonar cannot sign its toasts with (`ui.toast` of ./contract.ts): without a visible character, Sonar's or Ping's.
 	| { readonly kind: "name"; readonly name: string }
 	// A text longer than its bound (SUMMARY_MOST of ./card-texts.ts), named by its path in the card.
 	| { readonly kind: "too-long"; readonly field: string; readonly most: number }
-	// Words in a language whose code is not two lower case letters ("fr").
-	| { readonly kind: "language"; readonly language: string }
 	// The words of a key the card does not declare, at `field` (translations.<language>.keys).
 	| { readonly kind: "undeclared-key"; readonly field: string; readonly key: string };
 
