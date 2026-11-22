@@ -10,7 +10,7 @@ The same screens as Sonar's plugin, in your language:
 
 - In Settings › Services, in the group of its TypeSafe key, after the key: the switch "Jev on", then its usage over today, 7 or 30 days (the period is kept in your browser): what its judgments cost, its calls and tokens ("partly estimated" when a call's tokens were not said), a bar a day over 7 or 30 days when a day cost something (its exact amount over the chart, for the bar under the pointer, touched, or chosen with the arrow keys), and its price. Without a key, the part is greyed and the switch held off, its tip saying Jev needs a key. A switch TypeSafe refuses to save goes back, and Sonar says "Settings not saved.". A reading that fails is said in its place, with "Retry". While the part shows, its usage is read again every 10 s, and the cost changes in place; not while the page is hidden or the group folded, and at once when the page shows again; a period chosen quickly twice shows the last one chosen.
 - At the top of the Agents tab, while TypeSafe has no key: a note on what that changes, with "Open Services". Its × hides it in this browser for good (hidden by Sonar's plugin's ×, it stays hidden); it goes once the key is given, and comes back if the key is removed.
-- When Jev switches itself off, at its cap or out of credits: the plugin's words in a brief error message, its switch turns off without a new page, and its usage is read again.
+- When Jev switches itself off, at its cap or out of credits: Ping says it in his bubble, signed "Jev" (`api.ui.say`), its switch turns off without a new page, and its usage is read again. Without Sonar's voice, or on a Sonar from before `ui.say`, a brief error message says it.
 
 The chart is the extension's own (`src/page/chart.ts`, `src/page.css`), drawn with Sonar's tokens; the switch, the note, the period's choice, the reading that failed and the brief message are Sonar's own parts (`api.ui`).
 
@@ -76,7 +76,8 @@ Its settings, `{ "on": true, "monthlyUsd": 2 }`, are in Sonar's settings file, u
 - Its usage is its own: Sonar's usage page does not count it. `GET /usage` gives what it cost.
 - Its switch and its cap are its own settings, not Sonar's `jev` and `jevMonthlyUsd`. Its key is the extension's, given in Settings › Services.
 - It lends your key to a linked computer while its switch is on; the plugin lent it whenever it ran.
-- At its cap, the log tells you to turn it on again in its settings or raise its cap; the plugin named Sonar's setting `jevMonthlyUsd`.
+- At its cap, the log tells you to turn it on again in its settings or raise its cap, and the page sends you to Services; the plugin named Sonar's setting `jevMonthlyUsd`.
+- Its card gives its short text and why its key is asked, in English and in French (`summary`, `why`, `translations`): Sonar shows them on its line in Settings › Extensions and on its key's card.
 
 ## Develop it
 
