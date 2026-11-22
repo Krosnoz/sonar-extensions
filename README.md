@@ -15,7 +15,7 @@ To install one in Sonar: Settings › Extensions › Add, then its install addre
 - `<id>/`: one extension, its folder named by its id. Its card (`extension.json`), `src/`, `tests/`, `scripts/build.ts`, `package.json`, `tsconfig.json` and its `README.md`. Its `bun run build` writes `<id>/dist/` (the extension's folder as Sonar lays it) and `<id>/release/` (`extension.json`, the card with the archive's SHA-256, and `extension.tar.gz`).
 - `vendor/sonar-extension/`: the one copy of the contract (`@sonar/extension`), which every extension links (see [`vendor/README.md`](vendor/README.md)).
 - `scripts/`: the root's scripts, which run on every folder of the root that has an `extension.json`.
-- `release/`, written by `bun run build` at the root: two files per extension, `<id>.json` (its card with its archive's SHA-256) and `<id>.tar.gz` (its archive). Sonar reads these two files in the latest release of this repository.
+- `release/`, written by `bun run build` at the root: two files per extension, `<id>.json` (its card with its archive's SHA-256) and `<id>.tar.gz` (its archive). Sonar reads these two files in the latest release of this repository. And `extensions.json`, one file for all: the cards of the extensions [`catalog.json`](catalog.json) names, in its order. Sonar's screen Extensions reads it to offer the ones not installed yet; an extension left out of `catalog.json`, as `pinned-note`, is still published and installs by its address.
 
 ## Develop
 
