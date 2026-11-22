@@ -69,10 +69,12 @@ const isRelative = (path: string) =>
 // What draws nothing: spaces, controls, format characters (zero width…), combining marks alone, and the letters that
 // are blank (the Hangul fillers, the empty braille cell).
 const BLANK = /[\p{White_Space}\p{Cc}\p{Cf}\p{Z}\p{M}ᅟᅠ⠀ㅤﾠ]/gu;
-// A name that signs: some character drawn, and not Sonar's, in any case or width ("Ｓｏｎａｒ").
+// A name that signs: some character drawn, and not Sonar's, in any case or width ("Ｓｏｎａｒ"): its letters and digits
+// alone, its punctuation and spaces left out ("Sonar.", "S.O.N.A.R"). Letters of another script that look alike are not
+// told apart.
 const signs = (name: string) => {
-	const drawn = name.normalize("NFKC").replace(BLANK, "");
-	return drawn !== "" && drawn.toLowerCase() !== "sonar";
+	const drawn = name.normalize("NFKC");
+	return drawn.replace(BLANK, "") !== "" && drawn.replace(/[^\p{L}\p{N}]/gu, "").toLowerCase() !== "sonar";
 };
 
 const isKeys = (value: unknown): value is readonly ManifestKey[] => Array.isArray(value) && value.every(isKey);
