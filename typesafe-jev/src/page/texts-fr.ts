@@ -17,7 +17,7 @@ export const french: Texts = {
 		open: "Ouvrir Services",
 	},
 	stopped: {
-		cap: (usd: number) => `Jev est coupé : il a coûté ${usd} $ ce mois-ci, son plafond. Réglage jevMonthlyUsd.`,
-		credits: "Jev est coupé : TypeSafe n'a plus de crédits. Rallume-le après la recharge.",
+		cap: (usd: number) => `est coupé : il a coûté ${usd} $ ce mois-ci, son plafond. Rallume-le dans Services, ou monte son plafond.`,
+		credits: "est coupé : TypeSafe n'a plus de crédits. Rallume-le après la recharge.",
 	},
 };

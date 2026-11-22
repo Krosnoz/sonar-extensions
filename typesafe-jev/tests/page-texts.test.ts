@@ -25,11 +25,13 @@ test("the French has every key of the English, and none copied from it", () => {
 	for (const [key, text] of Object.entries(en)) expect({ key, text: fr[key] }).not.toEqual({ key, text });
 });
 
-test("Jev off at its cap or out of credits: the plugin's words, a toast Sonar shows", () => {
-	expect(stopText({ kind: "cap", usd: 2 }, english)).toBe("Jev is off: it cost $2 this month, its cap. Setting jevMonthlyUsd.");
-	expect(stopText({ kind: "cap", usd: 2.5 }, french)).toBe("Jev est coupé : il a coûté 2.5 $ ce mois-ci, son plafond. Réglage jevMonthlyUsd.");
-	expect(stopText({ kind: "credits" }, english)).toBe("Jev is off: TypeSafe has no credits left. Turn it on again after the top-up.");
-	expect(stopText({ kind: "credits" }, french)).toBe("Jev est coupé : TypeSafe n'a plus de crédits. Rallume-le après la recharge.");
+// Sonar says the extension's name before the words: they go on from it ("Jev is off: …"), and never name a setting
+// the user cannot find on a screen.
+test("Jev off at its cap or out of credits: the plugin's words without its name, a toast Sonar shows", () => {
+	expect(stopText({ kind: "cap", usd: 2 }, english)).toBe("is off: it cost $2 this month, its cap. Turn it on again in Services, or raise its cap.");
+	expect(stopText({ kind: "cap", usd: 2.5 }, french)).toBe("est coupé : il a coûté 2.5 $ ce mois-ci, son plafond. Rallume-le dans Services, ou monte son plafond.");
+	expect(stopText({ kind: "credits" }, english)).toBe("is off: TypeSafe has no credits left. Turn it on again after the top-up.");
+	expect(stopText({ kind: "credits" }, french)).toBe("est coupé : TypeSafe n'a plus de crédits. Rallume-le après la recharge.");
 	for (const texts of [english, french])
 		for (const data of [{ kind: "cap", usd: 2 }, { kind: "credits" }] as Json[]) expect(toastRefusal(stopText(data, texts), "error")).toBeNull();
 });

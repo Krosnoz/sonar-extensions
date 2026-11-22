@@ -30,9 +30,11 @@ const fakeNote = (text: string, options: Omit<Note, "hidden" | "told" | "text">)
 
 // A page as Sonar's gives it to the entry, with what the test reads back: the parts placed, the toasts shown, the
 // screens opened, the routes read, the browser's storage.
-function fakePage(language: "en" | "fr") {
+// `older`: a Sonar from before ui.say, which has only the toast.
+function fakePage(language: "en" | "fr", older = false) {
 	const parts: PartSlot[] = [];
 	const toasts: { text: string; tone: string | undefined }[] = [];
+	const said: string[] = [];
 	const opened: unknown[] = [];
 	const reads: string[] = [];
 	const listeners: ((data: Json) => void)[] = [];
@@ -62,6 +64,16 @@ function fakePage(language: "en" | "fr") {
 				if (refusal) throw new Error(refusal);
 				if (pace(Date.now())) toasts.push({ text, tone });
 			},
+			// Sonar refuses what it says as it refuses an error toast.
+			...(older
+				? {}
+				: {
+						say: (text: string) => {
+							const refusal = toastRefusal(text, "error");
+							if (refusal) throw new Error(refusal);
+							said.push(text);
+						},
+					}),
 			note: (text: string, options: Omit<Note, "hidden" | "told" | "text"> = {}) => fakeNote(text, options),
 		},
 		http: {
@@ -87,7 +99,7 @@ function fakePage(language: "en" | "fr") {
 	const tell = (data: Json) => {
 		for (const listen of listeners) listen(data);
 	};
-	return { api, parts, toasts, opened, reads, stored, settings, tell };
+	return { api, parts, toasts, said, opened, reads, stored, settings, tell };
 }
 
 // The note the part of the Agents tab draws, entered as Sonar enters it once.
@@ -116,14 +128,15 @@ test("it draws in Services, in its key's group, and in the Agents tab's notes: p
 	expect(page.parts.map(({ screen, place }) => `${screen}/${place}`)).toEqual(["services/section", "agents/notes"]);
 });
 
-test("Jev off by itself: the plugin's words as an error toast, and its switch read again", async () => {
+test("Jev off by itself: Ping says the plugin's words (ui.say), no toast beside, and its switch is read again", async () => {
 	page.tell({ kind: "cap", usd: 2 });
 	page.tell({ kind: "credits" });
 	page.tell({ kind: "other" });
-	expect(page.toasts).toEqual([
-		{ text: "Jev is off: it cost $2 this month, its cap. Setting jevMonthlyUsd.", tone: "error" },
-		{ text: "Jev is off: TypeSafe has no credits left. Turn it on again after the top-up.", tone: "error" },
+	expect(page.said).toEqual([
+		"is off: it cost $2 this month, its cap. Turn it on again in Services, or raise its cap.",
+		"is off: TypeSafe has no credits left. Turn it on again after the top-up.",
 	]);
+	expect(page.toasts).toEqual([]);
 	expect(page.reads.filter((path) => path === "/settings").length).toBe(2);
 });
 
@@ -131,7 +144,14 @@ test("in French, the French words", () => {
 	const french = fakePage("fr");
 	start(french.api);
 	french.tell({ kind: "credits" });
-	expect(french.toasts).toEqual([{ text: "Jev est coupé : TypeSafe n'a plus de crédits. Rallume-le après la recharge.", tone: "error" }]);
+	expect(french.said).toEqual(["est coupé : TypeSafe n'a plus de crédits. Rallume-le après la recharge."]);
+});
+
+test("on a Sonar from before ui.say, the same words as an error toast", () => {
+	const older = fakePage("en", true);
+	start(older.api);
+	older.tell({ kind: "credits" });
+	expect(older.toasts).toEqual([{ text: "is off: TypeSafe has no credits left. Turn it on again after the top-up.", tone: "error" }]);
 });
 
 test("without a TypeSafe key, the note shows, and its action opens Services", async () => {

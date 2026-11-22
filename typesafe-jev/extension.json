@@ -3,12 +3,31 @@
 	"name": "Jev",
 	"version": "0.1.0",
 	"contract": 1,
+	"summary": "Sentence and urgency of the cards",
 	"description": "Jev, TypeSafe's model, reads what your agents say: the sentence and urgency of their cards, which agents work on the same thing, a session's topic, where a spoken sentence goes, and the yes or no of the end-of-turn check.",
+	"translations": {
+		"fr": {
+			"summary": "Phrase et urgence des cartes",
+			"description": "Jev, le modèle de TypeSafe, lit ce que disent tes agents : la phrase et l'urgence de leurs cartes, les agents qui travaillent sur le même sujet, le sujet d'une session, où va une phrase dictée, et le oui ou non du contrôle de fin de tour.",
+			"keys": {
+				"typesafe": {
+					"why": "Elle ouvre Jev : la phrase et l'urgence des cartes, les messages qui t'attendent, les liens entre agents. Crée-la sur typesafe.ai."
+				}
+			}
+		}
+	},
 	"server": "server.js",
 	"page": "page.js",
 	"styles": "page.css",
 	"icon": "icon.svg",
-	"keys": [{ "name": "typesafe", "scope": "user", "label": "TypeSafe" }],
+	"keys": [
+		{
+			"name": "typesafe",
+			"scope": "user",
+			"label": "TypeSafe",
+			"why": "It opens Jev: the sentence and the urgency of the cards, the messages waiting for you, the links between agents. Create it on typesafe.ai."
+		}
+	],
 	"calls": ["api.typesafe.ai"],
 	"provides": ["judge"],
 	"paid": true
