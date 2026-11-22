@@ -2,12 +2,15 @@
 // the extension's code, and a tool of an extension's author may read it the same way. A card is taken whole or refused
 // with its reason, as data: the core says the reason in the user's language.
 
-import { CONTRACT, type Manifest, type ManifestKey, type ReadFamily } from "./contract";
+import type { Manifest, ManifestKey } from "./card";
+import { isFields, isText, signs, takenTranslations, wordsRefusal } from "./card-texts";
+import { CONTRACT, type ReadFamily } from "./contract";
 import type { Port } from "./ports";
 import { isPort, isReadFamily } from "./rules";
 
 // The ids an extension never takes: the core's words (its routes and files live under /api/ext/<id> and /ext/<id>),
-// then the ids of the plugins Sonar ships. Written here, so that this package depends on nothing: a test of Sonar's
+// then the ids of the plugins Sonar ships or shipped (`stats`, `jev`: an older Sonar's switch of that id stays the
+// former plugin's). Written here, so that this package depends on nothing: a test of Sonar's
 // keeps every id of PLUGIN_IDS (@sonar/domain) in it (tests/extension-manifest.test.ts).
 export const RESERVED_IDS: readonly string[] = [
 	"core",
@@ -43,7 +46,13 @@ export type Refusal =
 	// A port that is not one of the core's (PORTS of ./rules.ts).
 	| { readonly kind: "provide"; readonly provide: string }
 	// A name Sonar cannot sign its toasts with (`ui.toast` of ./contract.ts): without a visible character, or Sonar's.
-	| { readonly kind: "name"; readonly name: string };
+	| { readonly kind: "name"; readonly name: string }
+	// A text longer than its bound (SUMMARY_MOST of ./card-texts.ts), named by its path in the card.
+	| { readonly kind: "too-long"; readonly field: string; readonly most: number }
+	// Words in a language whose code is not two lower case letters ("fr").
+	| { readonly kind: "language"; readonly language: string }
+	// The words of a key the card does not declare, at `field` (translations.<language>.keys).
+	| { readonly kind: "undeclared-key"; readonly field: string; readonly key: string };
 
 export type ManifestReading = { readonly manifest: Manifest } | { readonly refusal: Refusal };
 
@@ -53,29 +62,17 @@ const FILES = ["icon", "server", "page", "styles"] as const;
 const ICON = /\.(svg|png|webp)$/i;
 
 type Fields = { readonly [key: string]: unknown };
-const isFields = (value: unknown): value is Fields => typeof value === "object" && value !== null && !Array.isArray(value);
-const isText = (value: unknown): value is string => typeof value === "string" && value.trim() !== "";
 const isTexts = (value: unknown): value is readonly string[] => Array.isArray(value) && value.every(isText);
 const isKey = (value: unknown): value is ManifestKey =>
 	isFields(value) &&
 	isText(value["name"]) &&
 	(value["scope"] === "user" || value["scope"] === "project") &&
-	(value["label"] === undefined || typeof value["label"] === "string");
+	(value["label"] === undefined || typeof value["label"] === "string") &&
+	(value["why"] === undefined || isText(value["why"]));
 // Forward slashes only, each part a name: no root, no drive, no "." nor "..", so that the path is the address the page
 // asks.
 const isRelative = (path: string) =>
 	!path.includes("\\") && !path.includes(":") && path.split("/").every((part) => part !== "" && part !== "." && part !== "..");
-
-// What draws nothing: spaces, controls, format characters (zero width…), combining marks alone, and the letters that
-// are blank (the Hangul fillers, the empty braille cell).
-const BLANK = /[\p{White_Space}\p{Cc}\p{Cf}\p{Z}\p{M}ᅟᅠ⠀ㅤﾠ]/gu;
-// A name that signs: some character drawn, and not Sonar's, in any case or width ("Ｓｏｎａｒ"): its letters and digits
-// alone, its punctuation and spaces left out ("Sonar.", "S.O.N.A.R"). Letters of another script that look alike are not
-// told apart.
-const signs = (name: string) => {
-	const drawn = name.normalize("NFKC");
-	return drawn.replace(BLANK, "") !== "" && drawn.replace(/[^\p{L}\p{N}]/gu, "").toLowerCase() !== "sonar";
-};
 
 const isKeys = (value: unknown): value is readonly ManifestKey[] => Array.isArray(value) && value.every(isKey);
 const isReads = (value: unknown): value is readonly ReadFamily[] => Array.isArray(value) && value.every(isReadFamily);
@@ -85,7 +82,9 @@ const orAbsent = (check: (value: unknown) => boolean) => (value: unknown) => val
 const CHECKS: readonly (readonly [string, (value: unknown) => boolean])[] = [
 	["name", isText],
 	["version", isText],
+	["summary", orAbsent(isText)],
 	["description", orAbsent((value) => typeof value === "string")],
+	["translations", orAbsent(isFields)],
 	["keys", orAbsent(isKeys)],
 	["calls", orAbsent(isTexts)],
 	["paid", orAbsent((value) => typeof value === "boolean")],
@@ -112,9 +111,12 @@ export function readManifest(value: unknown): ManifestReading {
 	}
 	const { icon } = value;
 	if (typeof icon === "string" && !ICON.test(icon)) return { refusal: { kind: "icon", path: icon } };
-	const unknown = unknownDeclared(value);
-	return unknown ? { refusal: unknown } : { manifest: taken(value, id, contract) };
+	const refusal = declaredRefusal(value);
+	return refusal ? { refusal } : { manifest: taken(value, id, contract) };
 }
+
+// What the card declares, once each field has its type: a read or a port the core does not know, then its words.
+const declaredRefusal = (value: Fields): Refusal | null => unknownDeclared(value) ?? wordsRefusal(value, isKeys(value["keys"]) ? value["keys"] : []);
 
 // The first read or port the card declares that the core does not know, named; null when it knows them all.
 function unknownDeclared({ reads, provides }: Fields): Refusal | null {
@@ -126,13 +128,15 @@ function unknownDeclared({ reads, provides }: Fields): Refusal | null {
 
 // The card's fields once checked, those it does not know left out.
 function taken(fields: Fields, id: string, contract: number): Manifest {
-	const { name, version, description, icon, server, page, styles, keys, calls, paid, reads, provides } = fields;
+	const { name, version, summary, description, translations, icon, server, page, styles, keys, calls, paid, reads, provides } = fields;
 	return {
 		id,
 		name: String(name),
 		version: String(version),
 		contract,
+		...(typeof summary === "string" ? { summary } : {}),
 		...(typeof description === "string" ? { description } : {}),
+		...(isFields(translations) ? { translations: takenTranslations(translations) } : {}),
 		...(typeof icon === "string" ? { icon } : {}),
 		...(typeof server === "string" ? { server } : {}),
 		...(typeof page === "string" ? { page } : {}),

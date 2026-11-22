@@ -1,15 +1,13 @@
 // The contract between Sonar and the extensions published outside its repository (./contract.ts, what Sonar measures in
 // ./measures.ts, the ports an extension fills in ./ports.ts, what their judge may give in ./judge-answers.ts), and the reading of
 // their card (./manifest.ts), and the rules both sides apply (./rules.ts). No dependency: an extension's author may read
-// it without the rest of Sonar. Its testing kit is apart, at @sonar/extension/testing (./testing.ts).
+// it without the rest of Sonar. The card's types are in ./card.ts, its words in other languages read by ./card-texts.ts. Its testing kit is apart, at @sonar/extension/testing (./testing.ts).
 
 export {
 	type AgentTool,
 	CONTRACT,
 	type CoreScreen,
 	type Json,
-	type Manifest,
-	type ManifestKey,
 	type PageApi,
 	type PageEntry,
 	type PageSlots,
@@ -44,6 +42,8 @@ export {
 	type Velocity,
 	type VelocityWeek,
 } from "./measures";
+export { type CardTranslation, type Manifest, type ManifestKey } from "./card";
+export { KEY_WHY_MOST, localized, SUMMARY_MOST } from "./card-texts";
 export { type ManifestReading, readManifest, type Refusal, RESERVED_IDS } from "./manifest";
 export { type JudgedSession, type JudgeProvider, type JudgeRoute, type Port } from "./ports";
 export {

@@ -10,7 +10,7 @@
 // agent's own id (its transcript's), which outlives the handle, and the one every read of what Sonar measures gives.
 // What Sonar measures has its types in ./measures.ts; the ports an extension fills, in ./ports.ts.
 
-import type { JudgeProvider, Port } from "./ports";
+import type { JudgeProvider } from "./ports";
 import type {
 	ClosedSession,
 	Covered,
@@ -30,42 +30,12 @@ export const CONTRACT = 1;
 // Anything JSON carries.
 export type Json = null | boolean | number | string | readonly Json[] | { readonly [key: string]: Json };
 
-// --- The card: extension.json at the root of the extension, read without running any of its code (./manifest.ts). ---
-
-// A key the extension keeps in Sonar's secrets, under its name: one for the user, or one per project.
-export type ManifestKey = { readonly name: string; readonly scope: "user" | "project"; readonly label?: string };
+// The card (extension.json) has its types in ./card.ts.
 
 // A family of what Sonar measures (ServerApi below): `usage` (usage.days, usage.timeline, usage.velocity), `presence`,
 // `tasks`, `sessions` (sessions.closed and the event "session-closed"), `merges`, `commands`, `trust` (projects.trust).
-// sessions.list and projects.list need none: what is open now is no measure.
+// sessions.list and projects.list need none: what is open now is no measure. A card declares those it reads.
 export type ReadFamily = "usage" | "presence" | "tasks" | "sessions" | "merges" | "commands" | "trust";
-
-export type Manifest = {
-	// Lower case letters, digits and dashes, 2 to 40 characters, a letter first; never a name the core reserves. The
-	// extension's folder bears it.
-	readonly id: string;
-	readonly name: string;
-	readonly version: string;
-	// The version of this contract the extension was built against: refused when the core does not serve it.
-	readonly contract: number;
-	readonly description?: string;
-	// Files of the extension, relative to its root, with forward slashes: an SVG icon, its entries already built (one
-	// file each, no import left to resolve), its style sheet.
-	readonly icon?: string;
-	readonly server?: string;
-	readonly page?: string;
-	readonly styles?: string;
-	readonly keys?: readonly ManifestKey[];
-	// The hosts it calls (api.example.com), and whether one of them bills: told to the user before it is installed.
-	readonly calls?: readonly string[];
-	readonly paid?: boolean;
-	// What it reads of what Sonar measures, told to the user before it is installed: a read of a family it does not
-	// declare throws. It informs the user, it is no barrier: the extension runs in Sonar's process.
-	readonly reads?: readonly ReadFamily[];
-	// The ports of the core it fills (ServerApi's provide). The card of the preview (POST /api/extensions/preview) carries
-	// them; the page will show them before the install in a later version.
-	readonly provides?: readonly Port[];
-};
 
 // --- The server's side: `export function start(api)` of the file `server` names. ---
 
@@ -250,6 +220,10 @@ export type PageUi = {
 	// already on screen is not shown twice. Sonar signs it with the extension's name; the extension has one on screen,
 	// the new one in place of its own, and never makes one of Sonar's leave.
 	readonly toast: (text: string, tone?: ToastTone) => void;
+	// A message that matters, said to the user: Ping says it in his bubble while the voice runs, else it is the
+	// extension's error toast. Signed with the extension's name, bounded as a toast's text (it throws as one), 3 in 10 s.
+	// Absent from a Sonar older than it: an extension calls `api.ui.say?.(text)`, or its toast without it.
+	readonly say?: (text: string) => void;
 	// The core's switch in its labelled row, as a setting's. A click moves it and calls `change` with its new position;
 	// held while `change` runs, its `disabled` left as the extension sets it. If it rejects, the switch goes back and the
 	// failure is said by the extension's `toast` (Sonar's default words for one it refuses); if it throws at once, the

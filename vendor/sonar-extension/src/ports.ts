@@ -22,7 +22,7 @@ export type JudgeRoute = {
 	readonly ms: number;
 };
 
-// The judge of what agents and the user say (the plugin "jev" fills it while it runs). Each probability goes from 0 to 1.
+// The judge of what agents and the user say (an extension fills it, as typesafe-jev does). Each probability goes from 0 to 1.
 export type JudgeProvider = {
 	// How urgently an agent waits for the user, from 0 (may wait days) to 2 (blocks a work or touches production), and
 	// which of its message's sentences its card shows (`status`, one of messageSentences(message) of ./judge-answers.ts;
@@ -53,7 +53,7 @@ export type JudgeProvider = {
 	// nothing is lent. A judge that lends names its key (`lentAs`).
 	readonly lend?: () => Promise<string | null>;
 	// The name of the key it lends and takes: 2 to 40 characters, lower case letters, digits and "-" ("typesafe" for
-	// TypeSafe's, as the plugin "jev" lends it). Its `lend` goes under that name, and `yesOrNo` gets `lentKey` only from a
+	// TypeSafe's, as the extension typesafe-jev lends it). Its `lend` goes under that name, and `yesOrNo` gets `lentKey` only from a
 	// judge of the same name on the other computer: a key never reaches a service the user did not choose. Today the
 	// linked computer runs a lent key named "typesafe" alone.
 	readonly lentAs?: string;

@@ -1,6 +1,6 @@
 // What a judge an extension fills may give the core (JudgeProvider of ./ports.ts), checked the same way by Sonar
 // (apps/server/src/extensions/judge-port.ts) and by the kit (./testing.ts): an extension that gives what Sonar refuses
-// fails in its own tests as in Sonar. The bounds are the plugin Jev's own: a probability from 0 to 1, an urgency on its
+// fails in its own tests as in Sonar. The bounds are the former plugin Jev's: a probability from 0 to 1, an urgency on its
 // three levels, a sentence picked from the message, never written. Plain functions: the kit imports nothing of Sonar.
 
 import type { JudgeProvider, JudgeRoute } from "./ports";

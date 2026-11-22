@@ -2,7 +2,8 @@
 // those its bound keeps, in the order Sonar promises (the oldest first), as Sonar does. Empty until filled; the velocity
 // null until set.
 
-import type { Manifest, ServerApi } from "./contract";
+import type { Manifest } from "./card";
+import type { ServerApi } from "./contract";
 import type {
 	ClosedSession,
 	Covered,
