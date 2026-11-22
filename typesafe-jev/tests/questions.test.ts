@@ -90,6 +90,21 @@ test("freshness, correction, pairs, a topic among the candidates when Jev is sur
 	});
 });
 
+test("the state's fields are named in English, and every field an instruction quotes is in the state", async () => {
+	const { judge } = await started(typesafe);
+	await judge.judge("Billing", MESSAGE);
+	await judge.stillRelevant("oui", "Je merge ?", "J'ai mergé.");
+	await judge.isCorrection("résume la PR", "non, arrête");
+	await judge.chooseTopic({ name: "A", branch: "feat/x", brief: "billing", ask: "Je merge ?", summary: "tests verts" }, { Billing: "stripe" });
+	await judge.route("montre B", ["A", "B"], { who: "A", text: "Je merge ?" });
+	expect(typesafe.asked).toHaveLength(5);
+	for (const { state, questions } of typesafe.asked) {
+		for (const key of Object.keys(state)) expect(key).toMatch(/^[a-z][a-zA-Z0-9]*$/);
+		const quoted = Object.values(questions).flatMap((question) => [...String(question.instructions).matchAll(/`(\w+)`/g)].map((match) => match[1]));
+		expect(Object.keys(state)).toEqual(expect.arrayContaining(quoted));
+	}
+});
+
 test("no pair asks nothing; a topic Jev says none of, or one it was not given, is none", async () => {
 	const { judge } = await started(typesafe);
 	expect(await judge.relatedPairs([])).toEqual([]);
