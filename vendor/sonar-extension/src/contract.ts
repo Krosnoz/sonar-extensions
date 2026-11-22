@@ -242,14 +242,18 @@ export type PageUi = {
 	readonly cloud: (tile: HTMLElement, seed: string) => void;
 	// A reading that failed, said once in its place with "Retry".
 	readonly failure: (reason: string, retry: () => void) => HTMLElement;
-	// Fills `place` with what `read` gives: dots while it waits, then `draw`, or the failure said once with "Retry".
+	// Fills `place` with what `read` gives: dots while it waits, then `draw`, or the failure said once with "Retry". Only
+	// the last `load` of a place draws; one that ends once its screen left draws in the part kept.
 	readonly load: <Value>(place: HTMLElement, read: () => Promise<Value>, draw: (value: Value) => HTMLElement | readonly HTMLElement[]) => Promise<void>;
 	// A brief message at the top of the screen, the core's toast ("info" by default): a plain text, 200 characters at
 	// most, else it throws (toastRefusal of ./rules.ts). Past 3 in 10 s, one is left out (TOAST_PACE); the same text
-	// already on screen is not shown twice.
+	// already on screen is not shown twice. Sonar signs it with the extension's name; the extension has one on screen,
+	// the new one in place of its own, and never makes one of Sonar's leave.
 	readonly toast: (text: string, tone?: ToastTone) => void;
 	// The core's switch in its labelled row, as a setting's. A click moves it and calls `change` with its new position;
-	// held while `change` runs. If it rejects, the switch goes back and the failure is said, as for a setting of the core.
+	// held while `change` runs, its `disabled` left as the extension sets it. If it rejects, the switch goes back and the
+	// failure is said by the extension's `toast` (Sonar's default words for one it refuses); if it throws at once, the
+	// extension is cut, as by a listener's throw.
 	// `hint`: its tip. `disabled`: held (a key still to give).
 	readonly toggle: (
 		label: string,
@@ -258,7 +262,7 @@ export type PageUi = {
 		options?: { readonly hint?: string; readonly disabled?: boolean },
 	) => HTMLElement;
 	// The core's note, as a plugin's at the top of the Agents tab: a plain text, then `action` as a link, and a × that
-	// hides it and calls `close`.
+	// hides it and calls `close`. One of them that throws cuts the extension.
 	readonly note: (
 		text: string,
 		options?: { readonly action?: { readonly label: string; readonly run: () => void }; readonly close?: () => void },

@@ -41,7 +41,9 @@ export type Refusal =
 	// A read that is not a family of what Sonar measures (READ_FAMILIES of ./rules.ts).
 	| { readonly kind: "read"; readonly read: string }
 	// A port that is not one of the core's (PORTS of ./rules.ts).
-	| { readonly kind: "provide"; readonly provide: string };
+	| { readonly kind: "provide"; readonly provide: string }
+	// A name Sonar cannot sign its toasts with (`ui.toast` of ./contract.ts): without a visible character, or Sonar's.
+	| { readonly kind: "name"; readonly name: string };
 
 export type ManifestReading = { readonly manifest: Manifest } | { readonly refusal: Refusal };
 
@@ -63,6 +65,15 @@ const isKey = (value: unknown): value is ManifestKey =>
 // asks.
 const isRelative = (path: string) =>
 	!path.includes("\\") && !path.includes(":") && path.split("/").every((part) => part !== "" && part !== "." && part !== "..");
+
+// What draws nothing: spaces, controls, format characters (zero width…), combining marks alone, and the letters that
+// are blank (the Hangul fillers, the empty braille cell).
+const BLANK = /[\p{White_Space}\p{Cc}\p{Cf}\p{Z}\p{M}ᅟᅠ⠀ㅤﾠ]/gu;
+// A name that signs: some character drawn, and not Sonar's, in any case or width ("Ｓｏｎａｒ").
+const signs = (name: string) => {
+	const drawn = name.normalize("NFKC").replace(BLANK, "");
+	return drawn !== "" && drawn.toLowerCase() !== "sonar";
+};
 
 const isKeys = (value: unknown): value is readonly ManifestKey[] => Array.isArray(value) && value.every(isKey);
 const isReads = (value: unknown): value is readonly ReadFamily[] => Array.isArray(value) && value.every(isReadFamily);
@@ -91,6 +102,8 @@ export function readManifest(value: unknown): ManifestReading {
 	if (contract !== CONTRACT) return { refusal: { kind: "contract", contract, served: CONTRACT } };
 	const wrong = CHECKS.find(([field, valid]) => !valid(value[field]));
 	if (wrong) return { refusal: { kind: "field", field: wrong[0] } };
+	const name = String(value["name"]);
+	if (!signs(name)) return { refusal: { kind: "name", name } };
 	for (const field of FILES) {
 		const path = value[field];
 		if (typeof path === "string" && !isRelative(path)) return { refusal: { kind: "path", field, path } };
