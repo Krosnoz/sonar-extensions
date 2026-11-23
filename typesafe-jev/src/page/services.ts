@@ -14,9 +14,9 @@ import { usageFigures, usageView } from "./usage-view";
 export function servicesPart(api: PageApi, kit: Kit, settings: SettingsHub): PartSlot {
 	const cap = capPart(api, kit, settings);
 	const figures = usageFigures(api.ui, kit);
-	// Each report drawn tells the gauge the month's spending.
+	// Each report drawn tells the gauge the month's spending and its cap.
 	const reading = usageReading(api, kit, (report) => {
-		cap.month(report.month.usd);
+		cap.month(report.month.usd, report.month.monthlyUsd);
 		return figures(report);
 	});
 	return {

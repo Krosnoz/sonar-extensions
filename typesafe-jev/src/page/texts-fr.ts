@@ -12,7 +12,7 @@ export const french: Texts = {
 	thisMonth: "Ce mois-ci",
 	monthOf: (spent: string, cap: string) => `${spent} sur ${cap}`,
 	monthNoCap: (spent: string) => `${spent}, sans plafond`,
-	capReached: "Plafond atteint : monte-le pour rallumer Jev.",
+	capReached: "Plafond atteint : monte-le, puis rallume Jev.",
 	cost: "Jev · jugements",
 	costHint: (calls: string, tokens: string, estimated: boolean) => `${calls} appels · ${tokens} tokens${estimated ? " · en partie estimé" : ""}`,
 	perDay: (max: string) => `Par jour · max ${max}`,

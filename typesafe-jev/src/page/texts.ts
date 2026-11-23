@@ -13,7 +13,7 @@ export const english = {
 	monthOf: (spent: string, cap: string) => `${spent} of ${cap}`,
 	monthNoCap: (spent: string) => `${spent}, no cap`,
 	// Jev stays off until it is turned on again, and turns off again while the month is past its cap.
-	capReached: "Cap reached: raise it to turn Jev on again.",
+	capReached: "Cap reached: raise it, then turn Jev on again.",
 	cost: "Jev · judgments",
 	costHint: (calls: string, tokens: string, estimated: boolean) => `${calls} calls · ${tokens} tokens${estimated ? " · partly estimated" : ""}`,
 	perDay: (max: string) => `Per day · max ${max}`,

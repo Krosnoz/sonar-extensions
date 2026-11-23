@@ -1,8 +1,8 @@
 // Jev's monthly cap in its part of Services (./services.ts), under the switch: Sonar's number field (`ui.number`, on a
 // Sonar that has it), then the month's gauge, the extension's own (../page.css), as Sonar's bar of an account's limit.
 //
-// The gauge follows the cap the settings tell (./settings.ts: a cap saved, without a new page) and the month's spending
-// each reading of the usage brings (./usage-reading.ts, every 10 s while the part shows). The field is drawn again for a
+// The gauge follows the cap the settings tell (./settings.ts: a cap saved, without a new page), then the month's spending
+// and its cap each reading of the usage brings (./usage-reading.ts, every 10 s while the part shows). The field is drawn again for a
 // cap or a key changed elsewhere, and for its alert once a reading of the usage says the cap reached or no longer:
 // never under the user's hand, and not for its own saving, whose "Saved" Sonar says in the field's line.
 
@@ -29,14 +29,17 @@ export function capPart(api: PageApi, kit: Kit, settings: SettingsHub) {
 	});
 	// Saved: told to the settings' listeners, the gauge among them. Refused: an empty Error, so that Sonar says its own
 	// words, as the switch's.
-	const change = (value: number | null) =>
-		api.http.post("/settings", { monthlyUsd: value }).then(
+	const change = (value: number | null) => {
+		// The field that sends: one drawn again meanwhile still shows the former cap, and is drawn for the new one.
+		const sent = field;
+		return api.http.post("/settings", { monthlyUsd: value }).then(
 			(answer) => {
-				if (field) field.drawn = { ...field.drawn, value };
+				if (field && field === sent) field.drawn = { ...field.drawn, value };
 				settings.told(answer);
 			},
 			() => Promise.reject(new Error("")),
 		);
+	};
 	const rowOf = (drawn: Field): HTMLElement | null => {
 		if (!ui.number) return null;
 		const row = ui.number(kit.texts.monthlyCap, drawn.value, change, {
@@ -79,9 +82,10 @@ export function capPart(api: PageApi, kit: Kit, settings: SettingsHub) {
 			const row = rowOf(wanted());
 			return row ? [row, gauge.node] : [gauge.node];
 		},
-		// The month's spending, as a reading of the usage brings it.
-		month: (usd: number) => {
-			state.usd = usd;
+		// The month's spending and its cap, as a reading of the usage brings them: a cap changed elsewhere (another
+		// device) is followed.
+		month: (usd: number, cap: number | null) => {
+			Object.assign(state, { usd, cap });
 			redraw(true);
 		},
 		leave: () => {
