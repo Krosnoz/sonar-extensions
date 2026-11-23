@@ -21,16 +21,18 @@ const offInSettings = () => off("Jev is off in its settings");
 export function jevJudge(api: ServerApi, options: JevOptions, usage: Usage): JudgeProvider {
 	const key = async () => (await api.keys.read(TYPESAFE_KEY))?.trim() || null;
 
-	// Jev switches itself off and says why, once: the switch stays off until the user turns it on again.
+	// Jev switches itself off and says why, once: the switch stays off until the user turns it on again. At its cap, by
+	// the cap read anew: none by then (the user removed it), Jev stays on.
 	let stopping: Promise<void> | null = null;
 	const stop = (reason: "cap" | "credits") =>
 		(stopping ??= (async () => {
 			const settings = await readSettings(api);
-			if (!settings.on) return;
+			const cap = settings.monthlyUsd;
+			if (!settings.on || (reason === "cap" && cap === null)) return;
 			await api.settings.write({ ...settings, on: false });
 			const texts = jevStopped[api.language()];
-			api.log(reason === "cap" ? texts.cap(settings.monthlyUsd) : texts.credits());
-			api.live.send(reason === "cap" ? { kind: "cap", usd: settings.monthlyUsd } : { kind: "credits" });
+			api.log(reason === "cap" ? texts.cap(cap ?? 0) : texts.credits());
+			api.live.send(reason === "cap" ? { kind: "cap", usd: cap ?? 0 } : { kind: "credits" });
 		})().finally(() => {
 			stopping = null;
 		}));
@@ -40,7 +42,8 @@ export function jevJudge(api: ServerApi, options: JevOptions, usage: Usage): Jud
 		const token = await key();
 		if (!settings.on) throw offInSettings();
 		if (!token) throw off("Jev has no TypeSafe key");
-		if (spentThisMonth(usage.days(), options.now()) >= settings.monthlyUsd) {
+		// Without a cap, never cut for its spending.
+		if (settings.monthlyUsd !== null && spentThisMonth(usage.days(), options.now()) >= settings.monthlyUsd) {
 			await stop("cap");
 			throw off("Jev reached its monthly cap");
 		}

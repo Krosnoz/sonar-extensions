@@ -1,6 +1,6 @@
 // The page entry: Sonar's page calls start(api) once per page load, with the extension switched on. It draws what Sonar's
-// plugin `jev` drew, in the places Sonar keeps for an extension: Jev's switch and usage in Services, under its TypeSafe
-// key (./page/services.ts); the note of the Agents tab while TypeSafe has no key (./page/note.ts); and, when Jev switches
+// plugin `jev` drew, in the places Sonar keeps for an extension: Jev's switch, its monthly cap and its usage in Services,
+// under its TypeSafe key (./page/services.ts); the note of the Agents tab while TypeSafe has no key (./page/note.ts); and, when Jev switches
 // itself off (its monthly cap reached, TypeSafe out of credits), the plugin's words said by Ping (ui.say), its switch
 // moved without a new page. Its texts follow the page's language.
 

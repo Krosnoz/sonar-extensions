@@ -17,6 +17,8 @@ export function kitOf(language: "en" | "fr") {
 		minimumFractionDigits: 3,
 		maximumFractionDigits: 3,
 	});
+	// A cap the user wrote: "$3", "$2.5", without decimals it does not have.
+	const cap = new Intl.NumberFormat(locale, { style: "currency", currency: "USD", currencyDisplay: "narrowSymbol", minimumFractionDigits: 0, maximumFractionDigits: 2 });
 	const whole = new Intl.NumberFormat(locale, { maximumFractionDigits: 0 });
 	const compact = new Intl.NumberFormat(locale, { notation: "compact", maximumFractionDigits: 1 });
 	// "Saturday, November 21"; "sam." in French, its dot left out under a bar.
@@ -26,6 +28,7 @@ export function kitOf(language: "en" | "fr") {
 	return {
 		texts,
 		paid: (value: number) => (value < 1 ? cents : money).format(value),
+		cap: (value: number) => cap.format(value),
 		whole: (value: number) => whole.format(value),
 		compact: (value: number) => compact.format(value),
 		fullDay: (at: Date) => fullDay.format(at),

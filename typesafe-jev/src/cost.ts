@@ -35,10 +35,11 @@ export function spentThisMonth(days: Readonly<Days>, now: number): number {
 }
 
 export type UsageDay = { day: string; calls: number; tokens: number; usd: number; estimated: boolean };
-export type UsageReport = { days: UsageDay[]; month: { usd: number; monthlyUsd: number } };
+// `monthlyUsd`: null without a cap.
+export type UsageReport = { days: UsageDay[]; month: { usd: number; monthlyUsd: number | null } };
 
 // The last `count` days, the oldest first, today included; and the month's spending against its cap.
-export function usageReport(days: Readonly<Days>, now: number, count: number, monthlyUsd: number): UsageReport {
+export function usageReport(days: Readonly<Days>, now: number, count: number, monthlyUsd: number | null): UsageReport {
 	const listed = Array.from({ length: count }, (_, i) => daysAgo(now, count - 1 - i)).map((day) => ({
 		day,
 		calls: days[day]?.calls ?? 0,

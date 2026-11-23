@@ -5,6 +5,15 @@ export const english = {
 	jevOn: "Jev on",
 	jevNeedsKey: "Jev needs a TypeSafe key",
 	periods: { "1": "Today", "7": "7 days", "30": "30 days" },
+	// The monthly cap under the switch, then the month's gauge (./cap.ts).
+	monthlyCap: "Monthly cap",
+	capHint: "In dollars. Jev turns off when the month reaches it. Empty: no cap.",
+	capNone: "none",
+	thisMonth: "This month",
+	monthOf: (spent: string, cap: string) => `${spent} of ${cap}`,
+	monthNoCap: (spent: string) => `${spent}, no cap`,
+	// Jev stays off until it is turned on again, and turns off again while the month is past its cap.
+	capReached: "Cap reached: raise it to turn Jev on again.",
 	cost: "Jev · judgments",
 	costHint: (calls: string, tokens: string, estimated: boolean) => `${calls} calls · ${tokens} tokens${estimated ? " · partly estimated" : ""}`,
 	perDay: (max: string) => `Per day · max ${max}`,
