@@ -6,6 +6,11 @@ import { french } from "./texts-fr";
 
 export type Kit = ReturnType<typeof kitOf>;
 
+// French parts its thousands by a narrow space (U+202F), which the page's font draws about a pixel wide at its small
+// sizes: "7 122" read "7122". A no-break space of the usual width (U+00A0) is seen, as Sonar's page writes them
+// (its ui/numbers.ts).
+const seen = (written: string) => written.replace(/(\d) (?=\d)/g, "$1 ");
+
 export function kitOf(language: "en" | "fr") {
 	const locale = language === "fr" ? "fr-FR" : "en-US";
 	const money = new Intl.NumberFormat(locale, { style: "currency", currency: "USD", currencyDisplay: "narrowSymbol", maximumFractionDigits: 2 });
@@ -27,10 +32,10 @@ export function kitOf(language: "en" | "fr") {
 	const texts: Texts = language === "fr" ? french : english;
 	return {
 		texts,
-		paid: (value: number) => (value < 1 ? cents : money).format(value),
-		cap: (value: number) => cap.format(value),
-		whole: (value: number) => whole.format(value),
-		compact: (value: number) => compact.format(value),
+		paid: (value: number) => seen((value < 1 ? cents : money).format(value)),
+		cap: (value: number) => seen(cap.format(value)),
+		whole: (value: number) => seen(whole.format(value)),
+		compact: (value: number) => seen(compact.format(value)),
 		fullDay: (at: Date) => fullDay.format(at),
 		shortWeekday: (at: Date) => shortWeekday.format(at),
 	};
