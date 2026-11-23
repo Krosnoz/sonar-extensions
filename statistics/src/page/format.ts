@@ -6,12 +6,19 @@ import type { Texts } from "./texts";
 export type Formats = ReturnType<typeof formatsOf>;
 
 export function formatsOf(locale: string, texts: Texts) {
-	const money = new Intl.NumberFormat(locale, { style: "currency", currency: "USD", currencyDisplay: "narrowSymbol", maximumFractionDigits: 2 });
-	const whole = new Intl.NumberFormat(locale, { maximumFractionDigits: 0 });
-	const one = new Intl.NumberFormat(locale, { maximumFractionDigits: 1 });
-	const percent = new Intl.NumberFormat(locale, { style: "percent", maximumFractionDigits: 0 });
-	const signedPercent = new Intl.NumberFormat(locale, { style: "percent", maximumFractionDigits: 0, signDisplay: "always" });
-	const signedPoints = new Intl.NumberFormat(locale, { maximumFractionDigits: 0, signDisplay: "always" });
+	// French parts its thousands by a narrow space (U+202F), which the page's font draws about a pixel wide at its small
+	// sizes: "7 122" read "7122". A no-break space of the usual width (U+00A0) is seen, as Sonar's page writes them
+	// (its ui/numbers.ts).
+	const number = (options: Intl.NumberFormatOptions) => {
+		const made = new Intl.NumberFormat(locale, options);
+		return { format: (value: number) => made.format(value).replace(/(\d) (?=\d)/g, "$1 ") };
+	};
+	const money = number({ style: "currency", currency: "USD", currencyDisplay: "narrowSymbol", maximumFractionDigits: 2 });
+	const whole = number({ maximumFractionDigits: 0 });
+	const one = number({ maximumFractionDigits: 1 });
+	const percent = number({ style: "percent", maximumFractionDigits: 0 });
+	const signedPercent = number({ style: "percent", maximumFractionDigits: 0, signDisplay: "always" });
+	const signedPoints = number({ maximumFractionDigits: 0, signDisplay: "always" });
 	// "15/10" in French, "10/15" in English.
 	const day = new Intl.DateTimeFormat(locale, { day: "2-digit", month: "2-digit" });
 	const duration = (ms: number): string => {
