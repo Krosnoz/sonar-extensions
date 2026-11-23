@@ -21,7 +21,7 @@ beforeEach(() => {
 
 const folder = () => mkdtempSync(join(tmpdir(), "typesafe-jev-"));
 const usd = (tokens: number) => (tokens * JEV_PER_MTOK) / 1e6;
-type Report = { days: { day: string; calls: number; tokens: number; usd: number; estimated: boolean }[]; month: { usd: number; monthlyUsd: number } };
+type Report = { days: { day: string; calls: number; tokens: number; usd: number; estimated: boolean }[]; month: { usd: number; monthlyUsd: number | null } };
 
 // This month's tokens cost 4 127 210 × 0.042 / 10⁶ ≈ 0.173 $; last month's, 34 000 000 tokens, 1.43 $.
 const NOW = noon(0, 15);
@@ -57,6 +57,21 @@ test("the month's billed tokens only: failed calls and last month stay out of th
 	await bench.post("/settings", { on: true });
 	expect(await judge.isCorrection("a", "b")).toBe(0);
 	expect(typesafe.asked).toHaveLength(2);
+});
+
+test("without a cap, Jev is never cut for its spending, however much the month cost", async () => {
+	const dataDir = folder();
+	writeFileSync(join(dataDir, "usage.json"), JSON.stringify(COUNTED));
+	const { bench, judge } = await started(typesafe, { dataDir, now: NOW, settings: { on: true, monthlyUsd: null } });
+	expect(await judge.isCorrection("a", "b")).toBe(0);
+	expect(await judge.judge("A", "Le menu est prêt.")).toMatchObject({ urgency: expect.any(Number) });
+	expect(typesafe.asked).toHaveLength(2);
+	expect(await bench.api.settings.read()).toEqual({ on: true, monthlyUsd: null });
+	expect(bench.live).toEqual([]);
+	expect(((await bench.get("/usage", { days: "1" })).body as Report).month).toEqual({ usd: expect.any(Number), monthlyUsd: null });
+	// A cap given again cuts Jev at its next call.
+	await bench.post("/settings", { monthlyUsd: 0 });
+	await expect(judge.isCorrection("a", "b")).rejects.toMatchObject({ off: true, message: "Jev reached its monthly cap" });
 });
 
 // On 28/09/2026, TypeSafe out of credits was asked 31 281 times in a day.

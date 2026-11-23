@@ -28,10 +28,29 @@ test("a change keeps what it does not name; a setting saved by hand that cannot 
 
 test("a change it cannot read is refused with a 400, and changes nothing", async () => {
 	const { bench } = await started(typesafe);
-	const refused: Json[] = [null, [], { on: "yes" }, { monthlyUsd: -1 }, { monthlyUsd: "2" }];
+	const refused: Json[] = [null, [], { on: "yes" }, { monthlyUsd: -1 }, { monthlyUsd: -0.5 }, { monthlyUsd: "2" }];
 	for (const body of refused)
-		expect(await bench.post("/settings", body)).toEqual({ status: 400, body: { error: "Send { on?: boolean, monthlyUsd?: a number from 0 }." } });
+		expect(await bench.post("/settings", body)).toEqual({
+			status: 400,
+			body: { error: "Send { on?: boolean, monthlyUsd?: a number from 0, or null for no cap }." },
+		});
 	expect(await bench.api.settings.read()).toBeNull();
+});
+
+test("no cap: null is saved and read back as null, by GET /settings and in the month of GET /usage", async () => {
+	const { bench } = await started(typesafe);
+	expect((await bench.post("/settings", { monthlyUsd: null })).body).toEqual({ on: true, key: "…-key", monthlyUsd: null });
+	expect(await bench.api.settings.read()).toEqual({ on: true, monthlyUsd: null });
+	expect((await bench.get("/settings")).body).toEqual({ on: true, key: "…-key", monthlyUsd: null });
+	expect(((await bench.get("/usage", { days: "1" })).body as { month: unknown }).month).toEqual({ usd: 0, monthlyUsd: null });
+	expect((await bench.post("/settings", { monthlyUsd: 3 })).body).toEqual({ on: true, key: "…-key", monthlyUsd: 3 });
+});
+
+test("a cap saved by hand: null is no cap; one it cannot read is $2", async () => {
+	expect((await (await started(typesafe, { settings: { monthlyUsd: null } })).bench.get("/settings")).body).toMatchObject({ monthlyUsd: null });
+	for (const monthlyUsd of [-1, "3", true, [], {}] as Json[])
+		expect((await (await started(typesafe, { settings: { monthlyUsd } })).bench.get("/settings")).body).toMatchObject({ monthlyUsd: 2 });
+	expect((await (await started(typesafe, { settings: { on: true } })).bench.get("/settings")).body).toMatchObject({ monthlyUsd: 2 });
 });
 
 test("the usage: the last days, today last, 30 by default; days it cannot read refused with a 400", async () => {

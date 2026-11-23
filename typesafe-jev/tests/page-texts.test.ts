@@ -36,6 +36,37 @@ test("Jev off at its cap or out of credits: the plugin's words without its name,
 		for (const data of [{ kind: "cap", usd: 2 }, { kind: "credits" }] as Json[]) expect(toastRefusal(stopText(data, texts), "error")).toBeNull();
 });
 
+test("the monthly cap's words in both languages; its alert, a toast Sonar shows", () => {
+	const words = (texts: typeof english) => [
+		texts.monthlyCap,
+		texts.capHint,
+		texts.capNone,
+		texts.thisMonth,
+		texts.monthOf("1", "3"),
+		texts.monthNoCap("1"),
+		texts.capReached,
+	];
+	expect(words(english)).toEqual([
+		"Monthly cap",
+		"In dollars. Jev turns off when the month reaches it. Empty: no cap.",
+		"none",
+		"This month",
+		"1 of 3",
+		"1, no cap",
+		"Cap reached: raise it to turn Jev on again.",
+	]);
+	expect(words(french)).toEqual([
+		"Plafond mensuel",
+		"En dollars. Jev se coupe quand le mois l'atteint. Vide : sans plafond.",
+		"aucun",
+		"Ce mois-ci",
+		"1 sur 3",
+		"1, sans plafond",
+		"Plafond atteint : monte-le pour rallumer Jev.",
+	]);
+	for (const texts of [english, french]) expect(toastRefusal(texts.capReached, "error")).toBeNull();
+});
+
 test("any other message says nothing", () => {
 	for (const data of [null, "cap", 2, [], {}, { kind: "cap" }, { kind: "cap", usd: "2" }, { kind: "cap", usd: Number.NaN }, { kind: "other" }] as Json[])
 		expect(stopText(data, english)).toBeNull();

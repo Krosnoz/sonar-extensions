@@ -18,8 +18,18 @@ class Node {
 	constructor(
 		readonly tag: string,
 		public className = "",
-		readonly text = "",
+		public text = "",
 	) {}
+	attributes: { [name: string]: string } = {};
+	setAttribute(name: string, value: string) {
+		this.attributes[name] = value;
+	}
+	readonly style = {
+		values: {} as { [name: string]: string },
+		setProperty(name: string, value: string) {
+			this.values[name] = value;
+		},
+	};
 	readonly classList = {
 		toggle: (name: string, on: boolean) => {
 			const names = new Set(this.className.split(" ").filter(Boolean));
@@ -58,6 +68,10 @@ class Node {
 	get textContent(): string {
 		return [this.text, ...this.children.map((child) => child.textContent)].filter(Boolean).join(" ");
 	}
+	set textContent(text: string) {
+		this.replaceChildren();
+		this.text = text;
+	}
 	find(className: string): Node | undefined {
 		if (this.className.split(" ").includes(className)) return this;
 		for (const child of this.children) {
@@ -76,7 +90,14 @@ const oneDay = (calls: number, estimated = false): Json => ({
 	month: { usd: 0, monthlyUsd: 2 },
 }) satisfies UsageReport as unknown as Json;
 
-function fakePage() {
+// The month's spending against its cap, as GET /usage gives it.
+const spent = (usd: number, monthlyUsd: number | null): Json => ({
+	days: [{ day: "2026-11-21", calls: 10, tokens: 10_000, usd: 0.01, estimated: false }],
+	month: { usd, monthlyUsd },
+});
+
+// `number`: false for a Sonar older than ui.number.
+function fakePage({ number = true } = {}) {
 	const pending: Pending[] = [];
 	const posted: Json[] = [];
 	const listeners: ((data: Json) => void)[] = [];
@@ -95,6 +116,15 @@ function fakePage() {
 			node.data = { on, change, ...options };
 			return node;
 		},
+		...(number
+			? {
+					number: (label: string, value: number | null, change: (value: number | null) => Promise<unknown>, options: object) => {
+						const node = new Node("div", "ui-number", label);
+						node.data = { value, change, ...options };
+						return node;
+					},
+				}
+			: {}),
 		load: async (place: Node, read: () => Promise<unknown>, draw: (value: unknown) => Node | Node[]) => {
 			place.replaceChildren(new Node("div", "dots"));
 			try {
@@ -113,7 +143,9 @@ function fakePage() {
 			post: async (path: string, body: Json) => {
 				if (post.refuse) throw new Error("refused");
 				posted.push({ path, body });
-				return {};
+				// As the server answers: its settings after the change.
+				const cap = (body as { monthlyUsd?: Json }).monthlyUsd;
+				return { on: true, key: "…1234", monthlyUsd: cap === undefined ? 2 : cap };
 			},
 		},
 		live: {
@@ -189,8 +221,8 @@ const answer = (page: ReturnType<typeof fakePage>, path: string, value: Json) =>
 };
 const keyed: Json = { on: true, key: "…1234", monthlyUsd: 2 };
 
-async function entered(settings: Json = keyed, usage: Json = oneDay(10)) {
-	const page = fakePage();
+async function entered(settings: Json = keyed, usage: Json = oneDay(10), sonar = { number: true }) {
+	const page = fakePage(sonar);
 	page.shown.enter?.();
 	answer(page, "/settings", settings);
 	answer(page, "/usage", usage);
@@ -345,4 +377,102 @@ test("once it left, it no longer listens to the page shown or hidden", async () 
 	expect(visibility.listeners.size).toBe(0);
 	page.shown.enter?.();
 	expect(visibility.listeners.size).toBe(1);
+});
+
+// Jev's monthly cap, under its switch: Sonar's number field (ui.number), then the month's gauge.
+const capped: Json = { on: true, key: "…1234", monthlyUsd: 3 };
+const REACHED = "Cap reached: raise it to turn Jev on again.";
+const capRow = (page: ReturnType<typeof fakePage>) => page.jevPart().find("ui-number");
+const changeOf = (page: ReturnType<typeof fakePage>) => capRow(page)?.data["change"] as (value: number | null) => Promise<unknown>;
+// What the gauge shows: its figure, and its bar as a screen reader and the sheet read it (none without a cap).
+function gaugeOf(page: ReturnType<typeof fakePage>) {
+	const gauge = page.jevPart().find("jev-month");
+	const meter = gauge?.find("jev-meter");
+	return {
+		figure: gauge?.find("jev-month-figure")?.textContent,
+		meter: meter && {
+			className: meter.className,
+			used: meter.find("jev-meter-fill")?.style.values["--used"],
+			aria: [meter.attributes["role"], meter.attributes["aria-valuenow"], meter.attributes["aria-valuemax"], meter.attributes["aria-valuetext"]],
+		},
+	};
+}
+
+test("the cap's field: Sonar's number field under the switch, with the cap saved and its words", async () => {
+	const page = await entered(capped, spent(1.52, 3));
+	expect(page.jevPart().children.map((child) => child.className)).toEqual(["ui-toggle", "ui-number", "jev-month", "jev-usage"]);
+	expect(capRow(page)?.text).toBe("Monthly cap");
+	expect(capRow(page)?.data).toMatchObject({
+		value: 3,
+		min: 0,
+		step: 0.5,
+		placeholder: "none",
+		hint: "In dollars. Jev turns off when the month reaches it. Empty: no cap.",
+		disabled: false,
+	});
+	expect(capRow(page)?.data["alert"]).toBeUndefined();
+});
+
+test("the gauge at 0 %, 80 %, 100 % and past its cap: its tone, its fill, what a screen reader says, and the alert at the cap", async () => {
+	const cases = [
+		[0, "jev-meter", "0", "0", "$0.000 of $3", undefined],
+		[2.4, "jev-meter near", "0.8", "2.4", "$2.40 of $3", undefined],
+		[3, "jev-meter full", "1", "3", "$3.00 of $3", REACHED],
+		[3.6, "jev-meter full", "1", "3", "$3.60 of $3", REACHED],
+	] as const;
+	for (const [usd, className, used, now, figure, alert] of cases) {
+		// oxlint-disable-next-line no-await-in-loop
+		const page = await entered(capped, spent(usd, 3));
+		expect(gaugeOf(page)).toEqual({ figure, meter: { className, used, aria: ["meter", now, "3", figure] } });
+		expect(capRow(page)?.data["alert"]).toBe(alert);
+	}
+});
+
+test("without a cap: no bar, the month's spending alone, the field empty", async () => {
+	const page = await entered({ ...(capped as object), monthlyUsd: null }, spent(1.52, null));
+	expect(gaugeOf(page)).toEqual({ figure: "$1.52, no cap", meter: undefined });
+	expect(capRow(page)?.data).toMatchObject({ value: null });
+	expect(capRow(page)?.data["alert"]).toBeUndefined();
+});
+
+test("a cap saved is posted, and the gauge follows it at once, without a new page; empty is no cap", async () => {
+	const page = await entered(capped, spent(2.4, 3));
+	const row = capRow(page);
+	await changeOf(page)(5);
+	expect(page.posted.at(-1)).toEqual({ path: "/settings", body: { monthlyUsd: 5 } });
+	expect(gaugeOf(page)).toEqual({ figure: "$2.40 of $5", meter: { className: "jev-meter", used: "0.48", aria: ["meter", "2.4", "5", "$2.40 of $5"] } });
+	// The field stays as written, its "Saved" said by Sonar.
+	expect(capRow(page)).toBe(row);
+	await changeOf(page)(null);
+	expect(page.posted.at(-1)).toEqual({ path: "/settings", body: { monthlyUsd: null } });
+	expect(gaugeOf(page)).toEqual({ figure: "$2.40, no cap", meter: undefined });
+});
+
+test("a cap refused rejects with an empty Error, so that Sonar says its own words; the gauge keeps its cap", async () => {
+	const page = await entered(capped, spent(1.52, 3));
+	page.post.refuse = true;
+	const refused = await changeOf(page)(1).catch((error: unknown) => error);
+	expect(refused).toBeInstanceOf(Error);
+	expect((refused as Error).message).toBe("");
+	expect(gaugeOf(page).figure).toBe("$1.52 of $3");
+});
+
+test("while it shows, the gauge follows the month's spending read again, and the field says the cap reached", async () => {
+	const page = await entered(capped, spent(1.52, 3));
+	tick();
+	answer(page, "/usage", spent(3.02, 3));
+	await until(() => gaugeOf(page).figure === "$3.02 of $3");
+	expect(gaugeOf(page).meter?.className).toBe("jev-meter full");
+	expect(capRow(page)?.data["alert"]).toBe(REACHED);
+});
+
+test("on a Sonar without ui.number: no field, the gauge alone", async () => {
+	const page = await entered(capped, spent(1.52, 3), { number: false });
+	expect(page.jevPart().children.map((child) => child.className)).toEqual(["ui-toggle", "jev-month", "jev-usage"]);
+	expect(gaugeOf(page).figure).toBe("$1.52 of $3");
+});
+
+test("without a key, the field is held, as the switch", async () => {
+	const page = await entered({ on: true, key: null, monthlyUsd: 3 }, spent(0, 3));
+	expect(capRow(page)?.data["disabled"]).toBe(true);
 });
