@@ -53,7 +53,7 @@ test("the monthly cap's words in both languages; its alert, a toast Sonar shows"
 		"This month",
 		"1 of 3",
 		"1, no cap",
-		"Cap reached: raise it to turn Jev on again.",
+		"Cap reached: raise it, then turn Jev on again.",
 	]);
 	expect(words(french)).toEqual([
 		"Plafond mensuel",
@@ -62,7 +62,7 @@ test("the monthly cap's words in both languages; its alert, a toast Sonar shows"
 		"Ce mois-ci",
 		"1 sur 3",
 		"1, sans plafond",
-		"Plafond atteint : monte-le pour rallumer Jev.",
+		"Plafond atteint : monte-le, puis rallume Jev.",
 	]);
 	for (const texts of [english, french]) expect(toastRefusal(texts.capReached, "error")).toBeNull();
 });

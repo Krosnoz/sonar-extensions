@@ -102,7 +102,8 @@ function fakePage({ number = true } = {}) {
 	const posted: Json[] = [];
 	const listeners: ((data: Json) => void)[] = [];
 	const stored = new Map<string, string>();
-	const post = { refuse: false };
+	// `hold`: a saving that waits, for what happens while it is on its way.
+	const post = { refuse: false, hold: null as Promise<void> | null };
 	const ui = {
 		el: (tag: string, className = "", text = "") => new Node(tag, className, text),
 		cloud: () => undefined,
@@ -143,6 +144,7 @@ function fakePage({ number = true } = {}) {
 			post: async (path: string, body: Json) => {
 				if (post.refuse) throw new Error("refused");
 				posted.push({ path, body });
+				if (post.hold) await post.hold;
 				// As the server answers: its settings after the change.
 				const cap = (body as { monthlyUsd?: Json }).monthlyUsd;
 				return { on: true, key: "…1234", monthlyUsd: cap === undefined ? 2 : cap };
@@ -381,7 +383,7 @@ test("once it left, it no longer listens to the page shown or hidden", async () 
 
 // Jev's monthly cap, under its switch: Sonar's number field (ui.number), then the month's gauge.
 const capped: Json = { on: true, key: "…1234", monthlyUsd: 3 };
-const REACHED = "Cap reached: raise it to turn Jev on again.";
+const REACHED = "Cap reached: raise it, then turn Jev on again.";
 const capRow = (page: ReturnType<typeof fakePage>) => page.jevPart().find("ui-number");
 const changeOf = (page: ReturnType<typeof fakePage>) => capRow(page)?.data["change"] as (value: number | null) => Promise<unknown>;
 // What the gauge shows: its figure, and its bar as a screen reader and the sheet read it (none without a cap).
@@ -464,6 +466,35 @@ test("while it shows, the gauge follows the month's spending read again, and the
 	await until(() => gaugeOf(page).figure === "$3.02 of $3");
 	expect(gaugeOf(page).meter?.className).toBe("jev-meter full");
 	expect(capRow(page)?.data["alert"]).toBe(REACHED);
+});
+
+test("a cap changed elsewhere (another device): the gauge, the field and its alert follow it at the next reading", async () => {
+	const page = await entered(capped, spent(2.4, 3));
+	tick();
+	answer(page, "/usage", spent(2.4, 2));
+	await until(() => gaugeOf(page).figure === "$2.40 of $2");
+	expect(gaugeOf(page).meter?.className).toBe("jev-meter full");
+	expect(capRow(page)?.data).toMatchObject({ value: 2, alert: REACHED });
+	tick();
+	answer(page, "/usage", spent(2.4, null));
+	await until(() => gaugeOf(page).figure === "$2.40, no cap");
+	expect(capRow(page)?.data).toMatchObject({ value: null });
+	expect(capRow(page)?.data["alert"]).toBeUndefined();
+});
+
+test("the field drawn again during a saving (the cap reached meanwhile) shows the cap saved once it is", async () => {
+	const page = await entered(capped, spent(2.4, 3));
+	let saved = () => {};
+	page.post.hold = new Promise<void>((done) => (saved = done));
+	const saving = changeOf(page)(5);
+	tick();
+	answer(page, "/usage", spent(3.02, 3));
+	await until(() => capRow(page)?.data["alert"] === REACHED);
+	saved();
+	await saving;
+	expect(capRow(page)?.data).toMatchObject({ value: 5 });
+	expect(capRow(page)?.data["alert"]).toBeUndefined();
+	expect(gaugeOf(page).figure).toBe("$3.02 of $5");
 });
 
 test("on a Sonar without ui.number: no field, the gauge alone", async () => {
