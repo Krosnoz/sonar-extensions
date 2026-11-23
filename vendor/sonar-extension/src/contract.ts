@@ -235,6 +235,29 @@ export type PageUi = {
 		change: (on: boolean) => Promise<unknown> | void,
 		options?: { readonly hint?: string; readonly disabled?: boolean },
 	) => HTMLElement;
+	// The core's number field in its labelled row, as a setting's: its label tied to the field, `hint` under it, and the
+	// line that says how the saving went. The value leaves when the field is left or on Enter, only when it changed: the
+	// number, or null for an empty field. A text that is no finite number, or one under `min`, is refused on the spot in
+	// that line, `change` not called. Held while `change` runs; "Saved" once it resolves; if it rejects, the line says its
+	// Error's message (Sonar's default words for one a toast refuses), and the field keeps what is written; if it throws at
+	// once, the extension is cut, as by a listener's throw. `alert`: said in that line in the error's tone while the field
+	// holds the value it was drawn with and nothing else is said there, bounded as a toast's text (it throws as one).
+	// `placeholder`: the field's words while it is empty.
+	// `disabled`: held. Its words are set as plain text. The extension draws the row again to change its value.
+	// Absent from a Sonar older than it: an extension tests `api.ui.number` before its call.
+	readonly number?: (
+		label: string,
+		value: number | null,
+		change: (value: number | null) => Promise<unknown> | void,
+		options?: {
+			readonly hint?: string;
+			readonly min?: number;
+			readonly step?: number;
+			readonly placeholder?: string;
+			readonly disabled?: boolean;
+			readonly alert?: string;
+		},
+	) => HTMLElement;
 	// The core's note, as a plugin's at the top of the Agents tab: a plain text, then `action` as a link, and a × that
 	// hides it and calls `close`. One of them that throws cuts the extension.
 	readonly note: (
