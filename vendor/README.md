@@ -1,6 +1,6 @@
 # vendor/sonar-extension
 
-An exact copy of `packages/extension/` of Sonar's repository, at commit `53f23f57a`: the contract between Sonar and an extension (`@sonar/extension`) and its testing kit (`@sonar/extension/testing`). It has no dependency.
+An exact copy of `packages/extension/` of Sonar's repository, as it was on 2026-11-23 (with a card's `summary`, `translations` and a key's `why`, and the page's `ui.say` and `ui.number`): the contract between Sonar and an extension (`@sonar/extension`) and its testing kit (`@sonar/extension/testing`). It has no dependency.
 
 The contract is not published on npm yet. Until it is, every extension of this repository links this one copy by `"@sonar/extension": "file:../vendor/sonar-extension"` in its `package.json`. Once it is published, remove this folder and depend on the published package.
 
