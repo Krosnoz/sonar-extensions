@@ -37,6 +37,14 @@ test("in French, the same words as Sonar's plugin", () => {
 	expect(chart?.bars[6]?.label).toBe("samedi 21 novembre");
 });
 
+test("in French, thousands are parted by a space that is seen, as Sonar's page writes them", () => {
+	// The narrow space (U+202F) is drawn about a pixel wide at the page's small sizes: "12 330" read "12330".
+	const kit = kitOf("fr");
+	expect(figuresOf(week, kit).hint).toStartWith("12 330 appels");
+	expect([kit.whole(1_002_381), kit.paid(1234.5), kit.cap(1500)]).toEqual(["1 002 381", "1 234,50 $", "1 500 $"]);
+	expect(kitOf("en").whole(1_002_381)).toBe("1,002,381");
+});
+
 test("over 7 days, a bar a day: its weekday under it, its share of the highest, today read at rest", () => {
 	const chart = figuresOf(week, kitOf("en")).chart;
 	expect(chart?.title).toBe("Per day · max $0.750");
