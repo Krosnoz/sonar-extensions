@@ -37,6 +37,10 @@ export type Manifest = {
 	readonly server?: string;
 	readonly page?: string;
 	readonly styles?: string;
+	// The other files its page loads, each by its path: a part of its code imported once a screen opens, its images.
+	// Served at /ext/<id>/<path> while it runs, as its page; the page reaches them from its module's own address
+	// (`new URL("./later.js", import.meta.url)`).
+	readonly files?: readonly string[];
 	readonly keys?: readonly ManifestKey[];
 	// The hosts it calls (api.example.com), and whether one of them bills: told to the user before it is installed.
 	readonly calls?: readonly string[];

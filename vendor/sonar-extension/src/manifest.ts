@@ -88,6 +88,7 @@ const CHECKS: readonly (readonly [string, (value: unknown) => boolean])[] = [
 	["paid", orAbsent((value) => typeof value === "boolean")],
 	["reads", orAbsent(isTexts)],
 	["provides", orAbsent(isTexts)],
+	["files", orAbsent(isTexts)],
 	...FILES.map((field) => [field, orAbsent(isText)] as const),
 ];
 
@@ -103,14 +104,21 @@ export function readManifest(value: unknown): ManifestReading {
 	if (wrong) return { refusal: { kind: "field", field: wrong[0] } };
 	const name = String(value["name"]);
 	if (!signs(name)) return { refusal: { kind: "name", name } };
+	const refusal = pathRefusal(value) ?? declaredRefusal(value);
+	return refusal ? { refusal } : { manifest: taken(value, id, contract) };
+}
+
+// The first of the card's files whose path leaves the extension's folder, named by its field; then an icon that is no
+// image. Null when each path stays in it.
+function pathRefusal(value: Fields): Refusal | null {
 	for (const field of FILES) {
 		const path = value[field];
-		if (typeof path === "string" && !isRelative(path)) return { refusal: { kind: "path", field, path } };
+		if (typeof path === "string" && !isRelative(path)) return { kind: "path", field, path };
 	}
-	const { icon } = value;
-	if (typeof icon === "string" && !ICON.test(icon)) return { refusal: { kind: "icon", path: icon } };
-	const refusal = declaredRefusal(value);
-	return refusal ? { refusal } : { manifest: taken(value, id, contract) };
+	const { files, icon } = value;
+	const leaving = isTexts(files) ? files.find((path) => !isRelative(path)) : undefined;
+	if (leaving !== undefined) return { kind: "path", field: "files", path: leaving };
+	return typeof icon === "string" && !ICON.test(icon) ? { kind: "icon", path: icon } : null;
 }
 
 // What the card declares, once each field has its type: a read or a port the core does not know, then its words.
@@ -126,7 +134,7 @@ function unknownDeclared({ reads, provides }: Fields): Refusal | null {
 
 // The card's fields once checked, those it does not know left out.
 function taken(fields: Fields, id: string, contract: number): Manifest {
-	const { name, version, summary, description, translations, icon, server, page, styles, keys, calls, paid, reads, provides } = fields;
+	const { name, version, summary, description, translations, icon, server, page, styles, files, keys, calls, paid, reads, provides } = fields;
 	return {
 		id,
 		name: String(name),
@@ -139,6 +147,7 @@ function taken(fields: Fields, id: string, contract: number): Manifest {
 		...(typeof server === "string" ? { server } : {}),
 		...(typeof page === "string" ? { page } : {}),
 		...(typeof styles === "string" ? { styles } : {}),
+		...(isTexts(files) ? { files } : {}),
 		...(isKeys(keys) ? { keys } : {}),
 		...(isTexts(calls) ? { calls } : {}),
 		...(typeof paid === "boolean" ? { paid } : {}),

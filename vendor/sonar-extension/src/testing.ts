@@ -35,6 +35,8 @@ export type Bench = {
 	// The open sessions and the projects it lists, as the test fills them.
 	readonly sessions: SessionLine[];
 	readonly projects: ProjectLine[];
+	// The fields the projects' files hold that Sonar does not know, as the test fills them (projects.left, projects.forget).
+	readonly left: { project: string; field: string; value: Json }[];
 	// Tells its listeners that the user closed a session, after it joins `measures.closed` as in Sonar. `task`: the
 	// session ran a delegated task (false by default).
 	readonly emit: <Name extends keyof ServerEvents>(event: Name, data: ServerEvents[Name], task?: boolean) => void;
@@ -199,6 +201,14 @@ function settingsOf(saved: Json): ServerApi["settings"] {
 	};
 }
 
+// The projects the test poses, and the fields it poses in their files, read and forgotten by their name.
+const projectsOf = (projects: ProjectLine[], left: Bench["left"], trust: ServerApi["projects"]["trust"]): ServerApi["projects"] => ({
+	list: async () => [...projects],
+	trust,
+	left: async (field) => left.filter((each) => each.field === field).map(({ project, value }) => ({ project, value })),
+	forget: async (field) => void left.splice(0, left.length, ...left.filter((each) => each.field !== field)),
+});
+
 export function fakeServer(options: BenchOptions): Bench {
 	const reading = readManifest(options.card);
 	if ("refusal" in reading) throw new Error(`Its card is refused: ${JSON.stringify(reading.refusal)}`);
@@ -211,6 +221,7 @@ export function fakeServer(options: BenchOptions): Bench {
 	const tools = toolsOf(id, log);
 	const sessions: SessionLine[] = [];
 	const projects: ProjectLine[] = [];
+	const left: Bench["left"] = [];
 	const measures = measuresOf(manifest.reads);
 	const events = eventsOf(log, manifest.reads, measures.bench.closed);
 	const { trust, closed, ...reads } = measures.api;
@@ -234,7 +245,7 @@ export function fakeServer(options: BenchOptions): Bench {
 		keys: { read: keys.read },
 		tools: { add: tools.add },
 		sessions: { list: async () => [...sessions], closed },
-		projects: { list: async () => [...projects], trust },
+		projects: projectsOf(projects, left, trust),
 		...reads,
 		on: events.on,
 		provide: { judge: ports.provide },
@@ -248,6 +259,7 @@ export function fakeServer(options: BenchOptions): Bench {
 		setKey: keys.set,
 		sessions,
 		projects,
+		left,
 		emit: events.emit,
 		measures: measures.bench,
 		tools: tools.list,

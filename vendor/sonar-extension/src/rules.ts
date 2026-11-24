@@ -70,6 +70,8 @@ export const PART_PLACES: { readonly [Screen in keyof PartPlaces]: readonly Part
 	"project-statistics": ["main"],
 	services: ["section"],
 	agents: ["notes"],
+	map: ["tools", "layer"],
+	"project-general": ["sections"],
 };
 // The same, read by any name: the extension's plain JavaScript may give anything.
 const placesByName: { readonly [screen: string]: readonly string[] } = PART_PLACES;

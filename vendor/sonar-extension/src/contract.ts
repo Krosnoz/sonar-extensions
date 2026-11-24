@@ -10,7 +10,11 @@
 // agent's own id (its transcript's), which outlives the handle, and the one every read of what Sonar measures gives.
 // What Sonar measures has its types in ./measures.ts; the ports an extension fills, in ./ports.ts.
 
+import type { PageLook } from "./look";
+import type { PageMap } from "./map";
 import type { JudgeProvider } from "./ports";
+import type { PageSession } from "./session";
+import type { PageSounds } from "./sounds";
 import type {
 	ClosedSession,
 	Covered,
@@ -119,7 +123,16 @@ export type ServerApi = {
 	};
 	// The projects; the trust of each one Sonar knows the folder of, as Sonar measured it last (it reads each one's git
 	// history: calls close together share one measure).
-	readonly projects: { readonly list: () => Promise<readonly ProjectLine[]>; readonly trust: () => Promise<readonly ProjectTrust[]> };
+	// `left`: a field of the projects' own settings files that this Sonar does not know (one a part of Sonar kept there
+	// before it left for an extension), as each project's file holds it, for those that do; Sonar keeps such a field as
+	// it is; its value is what the file holds, to be checked by who reads it. `forget`: the field leaves every project's
+	// file, once taken. A field Sonar knows is neither given nor forgotten. A Sonar older than them has neither.
+	readonly projects: {
+		readonly list: () => Promise<readonly ProjectLine[]>;
+		readonly trust: () => Promise<readonly ProjectTrust[]>;
+		readonly left?: (field: string) => Promise<readonly { readonly project: string; readonly value: unknown }[]>;
+		readonly forget?: (field: string) => Promise<void>;
+	};
 	// The agents' work: by day and session, from the day of `from` on, the oldest day first, then by session id in the
 	// order JavaScript sorts strings (`from`: the later of `since` and the start of the oldest day Sonar keeps whole, some
 	// weeks back; null until Sonar has read its agents' files once since it started); a session's timeline from `since`,
@@ -181,6 +194,11 @@ export type PartPlaces = {
 	readonly "project-statistics": "main";
 	readonly services: "section";
 	readonly agents: "notes";
+	// The Map: "tools", among its tools, before its zoom; "layer", over the whole page, under a session's panel, where
+	// an extension draws what covers the Map (PageMap's `cover`). The Map stays drawn: one `enter`, no `leave`.
+	readonly map: "tools" | "layer";
+	// A project's General screen: "sections", among its folded sections (PageUi's `section`); `mount` gets `{ project }`.
+	readonly "project-general": "sections";
 };
 // The tones of a toast (TOAST_TONES of ./rules.ts).
 export type ToastTone = "info" | "error";
@@ -203,6 +221,9 @@ export type PageUi = {
 	readonly el: (tag: string, className?: string, text?: string) => HTMLElement;
 	readonly icon: (name: string) => HTMLElement;
 	readonly fold: (title: string, body: HTMLElement) => HTMLElement;
+	// A section of a settings screen, folded: its title and its values in a few words on one line, `body` under it once
+	// opened. `say` gives its values; null, while they are read, shows dots. Absent from a Sonar older than it.
+	readonly section?: (title: string, body: HTMLElement) => { readonly node: HTMLElement; readonly say: (values: string | null) => void };
 	readonly empty: (title: string, text?: string) => HTMLElement;
 	readonly segmented: (options: readonly { readonly id: string; readonly label: string }[], chosen: string, choose: (id: string) => void) => HTMLElement;
 	// What `node` counts, on hover. With `name`, `node` also takes the keyboard's focus, says `name` to a screen reader,
@@ -292,6 +313,18 @@ export type PageApi = {
 			| { readonly core: Exclude<CoreScreen, "services">; readonly project: string }
 			| { readonly core: "services" },
 	) => void;
+	// The Map. Absent from a Sonar older than it: an extension tests `api.map` before its call.
+	readonly map?: PageMap;
+	// How the page looks: its theme, its movement. Absent from a Sonar older than it.
+	readonly look?: PageLook;
+	// Opens a session's panel by its handle (MapSession's). Throws for a session the page does not know. Absent from a
+	// Sonar older than it.
+	readonly openSession?: (handle: string) => void;
+	// The page's sounds (./sounds.ts). Absent from a Sonar older than it.
+	readonly sounds?: PageSounds;
+	// What Sonar says of a session, by its handle (./session.ts); null for a session the page does not know. Absent
+	// from a Sonar older than it.
+	readonly session?: (handle: string) => PageSession | null;
 };
 
 // Its start ends within 10 s, or the extension is cut for the page, as when it throws.
