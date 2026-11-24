@@ -16,21 +16,22 @@ const answerOf = (world: World): Json => ({ style: world.style, drawn: world.dra
 // Array.isArray does not tell a readonly array apart.
 const isFields = (body: Json | undefined): body is { readonly [key: string]: Json } => typeof body === "object" && body !== null && !Array.isArray(body);
 
-// A project Sonar lists: no style is kept for a name it does not know.
-async function known(api: ServerApi, project: unknown): Promise<string> {
+// Any project the Map shows has a town, whether or not the user named it in Sonar's projects: its sessions' folder
+// names it. So any name is taken, as Sonar's own settings took it.
+function named(project: unknown): string {
 	if (typeof project !== "string" || !project) throw refused("Name the project.", 400);
-	if (!(await api.projects.list()).some((each) => each.name === project)) throw refused(`No project ${project}.`, 404);
 	return project;
 }
 
-// The world a choice gives: the draw keeps the style drawn before, else draws among the other projects Sonar lists.
-async function chosen(api: ServerApi, kept: Kept, project: string, style: unknown): Promise<World> {
+// The world a choice gives: the draw keeps the style drawn before, else draws among the other projects' towns kept, as
+// Sonar drew among every project's settings.
+function chosen(kept: Kept, project: string, style: unknown): World {
 	if (isStyle(style)) return { ...(kept.projects[project] ?? NONE), style };
 	if (style !== "automatic") throw refused("The style is one of the six, or automatic.", 400);
 	const before = kept.projects[project]?.drawn;
 	if (before) return { style: null, drawn: before };
-	const others = (await api.projects.list()).filter((each) => each.name !== project);
-	return { style: null, drawn: leastTaken(others.map((each) => shownOf(kept.projects[each.name]))) };
+	const others = Object.entries(kept.projects).filter(([name]) => name !== project);
+	return { style: null, drawn: leastTaken(others.map(([, world]) => shownOf(world))) };
 }
 
 export async function start(api: ServerApi): Promise<void> {
@@ -48,13 +49,13 @@ export async function start(api: ServerApi): Promise<void> {
 	};
 
 	api.routes.get("/style", ({ query }: RouteRequest) =>
-		serial(async () => answerOf(kept.projects[await known(api, query["project"])] ?? NONE)),
+		serial(async () => answerOf(kept.projects[named(query["project"])] ?? NONE)),
 	);
 	api.routes.post("/style", ({ body }: RouteRequest) =>
 		serial(async () => {
 			const asked = isFields(body) ? body : {};
-			const project = await known(api, asked["project"]);
-			const world = await chosen(api, kept, project, asked["style"]);
+			const project = named(asked["project"]);
+			const world = chosen(kept, project, asked["style"]);
 			await save({ ...kept, projects: { ...kept.projects, [project]: world } });
 			return answerOf(world);
 		}),

@@ -24,11 +24,18 @@ test("a project without a choice reads none, and the reading writes nothing", as
 	expect(existsSync(join(bench.api.dataDir, "styles.json"))).toBe(false);
 });
 
-test("a project Sonar does not list, or none named, is refused", async () => {
+// The Map shows the projects of the sessions' folders, named in Sonar's projects or not: each has its town.
+test("a project Sonar does not list has its style as any other", async () => {
 	const bench = await started(["alpha"]);
-	expect((await bench.get("/style", { project: "beta" })).status).toBe(404);
+	expect(await bench.get("/style", { project: "beta" })).toEqual({ status: 200, body: { style: null, drawn: null } });
+	expect(await bench.post("/style", { project: "beta", style: "neon" })).toEqual({ status: 200, body: { style: "neon", drawn: null } });
+	expect((await bench.get("/style", { project: "beta" })).body).toEqual({ style: "neon", drawn: null });
+});
+
+test("none named is refused", async () => {
+	const bench = await started(["alpha"]);
 	expect((await bench.get("/style")).status).toBe(400);
-	expect((await bench.post("/style", { project: "beta", style: "neon" })).status).toBe(404);
+	expect((await bench.get("/style", { project: "" })).status).toBe(400);
 	expect((await bench.post("/style", { style: "neon" })).status).toBe(400);
 	expect((await bench.post("/style", ["alpha"])).status).toBe(400);
 });
@@ -56,12 +63,12 @@ test("the draw takes the style the fewest other projects' towns show, the first 
 	expect((await bench.post("/style", { project: "gamma", style: "automatic" })).body).toEqual({ style: null, drawn: "sun" });
 });
 
-test("the draw counts the projects Sonar lists only", async () => {
-	const bench = await started(["alpha", "beta"]);
+// As Sonar drew among every project's settings: a project it no longer lists keeps its town's style counted.
+test("the draw counts every other project's town kept, listed by Sonar or not", async () => {
+	const bench = await started(["alpha"]);
 	await bench.post("/style", { project: "beta", style: "riverside" });
-	bench.projects.splice(1, 1);
-	bench.projects.push({ name: "gamma", folder: "/work/gamma" });
-	expect((await bench.post("/style", { project: "gamma", style: "automatic" })).body).toEqual({ style: null, drawn: "riverside" });
+	await bench.post("/style", { project: "gamma", style: "automatic" });
+	expect(fileOf(bench).projects).toEqual({ beta: { style: "riverside", drawn: null }, gamma: { style: null, drawn: "brick" } });
 });
 
 test("a style drawn is kept: a choice keeps it under it, and the draw asked again gives it back", async () => {
