@@ -1,0 +1,35 @@
+{
+	"id": "town",
+	"name": "Town",
+	"version": "0.1.0",
+	"contract": 1,
+	"summary": "The Map as a town",
+	"description": "Turns the Map into an isometric town where you watch the agents at work. On a computer only.",
+	"translations": {
+		"fr": {
+			"name": "Ville",
+			"summary": "La Carte en ville",
+			"description": "Change la Carte en ville isométrique, où tu vois les agents travailler. Sur ordinateur seulement."
+		}
+	},
+	"page": "page.js",
+	"styles": "page.css",
+	"files": [
+		"sounds/bubble.mp3",
+		"sounds/pluck.mp3",
+		"sounds/wood-tap.mp3",
+		"towns/brick-day.webp",
+		"towns/brick-night.webp",
+		"towns/fjord-day.webp",
+		"towns/fjord-night.webp",
+		"towns/neon-day.webp",
+		"towns/neon-night.webp",
+		"towns/oasis-day.webp",
+		"towns/oasis-night.webp",
+		"towns/riverside-day.webp",
+		"towns/riverside-night.webp",
+		"towns/sun-day.webp",
+		"towns/sun-night.webp"
+	],
+	"paid": false
+}

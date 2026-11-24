@@ -1,0 +1,185 @@
+/* The town's one sheet, which Sonar adds to the page once the extension is on: its icon and its place first, then the
+   town once it shows (its signs, its names, its compass), then the block of a project's town style. Sonar's tokens
+   (var(--…)) are read; every class and id here is the town's. */
+
+/* The town that the Map turns into (./), and its icon: in the map's tools, then in the bottom right corner
+   while the town shows; on a phone, whose map has no tools, in the bottom left corner, where Ping's bubble never opens.
+   The town goes on under the top bar, as the map does: its drawing covers the screen, its camera frames what shows
+   below the bar (the top padding). Behind another tab, it stays as it was, out of sight (.away). */
+#town { position: fixed; inset: 0; padding-top: var(--top); z-index: 4; pointer-events: none; }
+#town.away { visibility: hidden; }
+body.town #town:not(.away) { pointer-events: auto; }
+/* The town covers the Map (PageMap's `cover`): the Map's tools hide, the extensions' tools stay. The town's icon is one
+   of them (the place "tools", ./toggle.ts#wireTown): it stays under the cover. */
+/* The drawing fades out over a short band at the bar's edge: of the paper's colour, the bar showed no edge, and a
+   tilted steeple read as sliced by a line drawn across it (12/11). Short, so the roofs under it keep their colours. */
+#town { --fade-from: var(--top); }
+#town > canvas:not(.town-cover) { mask-image: linear-gradient(to bottom, transparent var(--fade-from), var(--black) calc(var(--fade-from) + var(--space-4))); }
+/* What hides the page behind its edge as the town comes (./cover.ts), a pixel for a case of the page: whole
+   along the top bar, where the town fades. */
+.town-cover { position: fixed; pointer-events: none; image-rendering: pixelated; }
+
+.town-toggle svg { width: var(--glyph); height: var(--glyph); }
+.town-map.cornered { position: fixed; right: var(--gutter); bottom: var(--gutter); }
+/* Among the Map's tools, the icon slides down with them on `translate` (Sonar gives its extensions' tools that slide),
+   which adds to the `transform` it slides on to its own corner (./toggle.ts#corner): cornered, it keeps none. Each
+   keeps the fades and the press of Sonar's icon buttons, which a transition list of its own would replace. */
+.zoom .ext-part > .town-map:not(.cornered) { translate: 0 var(--down, 0); transition: translate var(--dur-move) var(--ease-in-out) var(--after, 0ms), background-color var(--dur-state), border-color var(--dur-state), transform var(--dur-press) var(--ease); }
+.zoom .ext-part > .town-map.cornered { translate: none; transition: background-color var(--dur-state), border-color var(--dur-state), transform var(--dur-press) var(--ease); }
+/* While the town is prepared, the icon turns: on the compositor, it keeps turning while the page is busy. */
+.town-toggle[aria-busy] svg { display: none; }
+.town-toggle[aria-pressed="true"] .ui-spinner { --c: var(--paper); }
+.town-phone { display: none; }
+@media (max-width: 600px) {
+	/* The phone's map starts under its top bar (phone.css): the town too. */
+	#town { inset: var(--top) 0 0; padding-top: 0; --fade-from: 0px; }
+	body[data-view="map"]:not(.at-home, .starting) .town-phone { display: grid; position: fixed; left: var(--gutter); bottom: calc(var(--gutter) + var(--safe-bottom) + var(--space-4)); z-index: 8; box-shadow: var(--shadow-1); }
+	/* The map's tools stand beside it. It is in the extensions' layer, which Sonar lays after them. */
+	.zoom:has(~ .ext-place .town-phone:not([hidden])) { left: calc(var(--gutter) + var(--control) + var(--space-2)); }
+}
+
+/* The town once it shows (./): its signs, its names, its compass. Nothing here shows before the town opens. */
+/* Over the town: a sign per subject, its name and counts nearer, a name per inhabitant nearest. */
+.world-layer { position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity 250ms var(--ease); }
+.world-layer.shown { opacity: 1; }
+.world-sign, .world-name { position: absolute; left: 0; top: 0; }
+#town { touch-action: none; }
+.world-sign { translate: -50% -100%; pointer-events: auto; border: 0; background: none; padding: 0; cursor: pointer; display: flex; align-items: center; gap: var(--space-1); touch-action: none; }
+/* Nearer, the sign is one pill: its pictogram, its count, its label. On the pill's surface the pictogram reads as the sign's
+   own, never as a sign on a car or on a roof passing under it. */
+.world-layer:not([data-level="0"]) .world-sign:not(.world-mini) { padding: 2px var(--space-2) 2px var(--space-1); border-radius: var(--radius-pill); background: var(--surface); box-shadow: var(--shadow-1); }
+/* The count beside the pictogram, in the label's type and its state's colours; hidden where the label's counts show. */
+.world-count { padding: 0 var(--space-1); border-radius: var(--radius-pill); background: color-mix(in oklab, var(--tone-work) 16%, var(--surface)); color: var(--ink); font: 600 var(--text-2xs)/1.5 var(--sans); box-shadow: var(--shadow-1); }
+.world-count[data-kind="wait"] { background: var(--tone-wait); color: var(--on-wait); }
+.world-count[data-kind="done"] { background: var(--tone-done); color: var(--paper); }
+.world-layer:not([data-level="0"]) .world-sign:not(.world-mini) .world-count { box-shadow: none; }
+.world-layer:not([data-level="0"]) .world-sign:not(.world-short, .world-mini) .world-count { display: none; }
+/* A count of one shows only beside the name alone, while it has room (./sign-looks.ts): over the pictogram alone, it adds
+   nothing. */
+.world-count[data-one] { display: none; }
+.world-layer:not([data-level="0"]) .world-short:not(.world-bare) .world-count[data-one] { display: inline; }
+.world-sign svg { display: block; flex: none; }
+.world-off { visibility: hidden; }
+/* A sign or a name that hides fades out where it stood, then leaves (its fade in: ./signs.ts). */
+.world-sign, .world-name { transition: opacity var(--dur-state-out) var(--ease), background-color var(--dur-state) var(--ease), visibility 0s; }
+.world-sign.world-off, .world-name.world-off { opacity: 0; transition: opacity var(--dur-state-out) var(--ease), visibility 0s var(--dur-state-out); }
+/* A name no one has seen yet takes no place in the page: the 10 000 names of a big town, hidden but laid out, froze it 2 s. */
+.world-name.world-unplaced { display: none; }
+/* A sign is a control: under the pointer its surface darkens a little, as a card over the map does; far out, its pictogram
+   alone takes the same tint behind it. From the keyboard, the page's focus ring follows its pill. */
+.world-sign { border-radius: var(--radius-pill); }
+@media (hover: hover) and (pointer: fine) { .world-layer:not([data-level="0"]) .world-sign:not(.world-mini):hover { background: color-mix(in oklab, var(--ink) 9%, var(--surface)); } }
+@media (hover: hover) and (pointer: fine) { :is(.world-layer[data-level="0"] .world-sign, .world-sign.world-mini):hover { background: color-mix(in oklab, var(--ink) 14%, transparent); } }
+/* The line from a sign that stood aside to its roof: 1 px long, scaled by its length. Thin, in the page's ink (dark by day,
+   light by night) so that it reads on the town in both themes. */
+.world-lead { position: absolute; left: 0; top: -0.5px; width: 1px; height: 1px; transform-origin: 0 50%; background: var(--ink); opacity: 0.8; pointer-events: none; }
+/* The anchor at the line's end, on the roof: the line's colour in a ring of the sign's, so that it reads as a pin on any
+   roof. Centred on its place by a negative margin, as the transform holds the place. */
+.world-dot { position: absolute; left: 0; top: 0; width: 5px; height: 5px; margin: -3.5px 0 0 -3.5px; border: 1px solid var(--surface); border-radius: var(--radius-pill); background: var(--ink); pointer-events: none; }
+/* The panel beside the pictogram fades in and out between the levels (and for a waiting sign that shrank to its pictogram):
+   out of the flow, so the sign takes the pictogram's size alone. */
+.world-label { display: inline-flex; transition: opacity var(--dur-state-out) var(--ease); }
+.world-layer[data-level="0"] .world-label, .world-mini .world-label { position: absolute; left: 100%; top: 0; opacity: 0; pointer-events: none; }
+.world-label, .world-name { align-items: center; gap: var(--space-1); padding: 2px var(--space-2); border-radius: var(--radius-pill); background: var(--surface); color: var(--ink); font: 500 var(--text-xs)/1.5 var(--sans); box-shadow: var(--shadow-1); white-space: nowrap; }
+.world-label strong { font-weight: 600; }
+/* Inside the sign's pill, the label is its text alone. */
+.world-layer:not([data-level="0"]) .world-sign:not(.world-mini) .world-label { padding: 0; background: none; box-shadow: none; }
+/* A sign short of room (a phone, a crowd): its name alone; its pictogram and count say the count. */
+.world-short .world-label > :not(strong) { display: none; }
+/* Its name cut, only when whole it finds no room (./signs.ts#LOOKS). */
+.world-cut .world-label strong { max-width: 15em; overflow: hidden; text-overflow: ellipsis; }
+.world-short.world-cut .world-label strong { max-width: 10em; }
+/* At work: a pill of its state's hue, as the other counts, light enough for the ink to read at 4.5:1 in both themes. */
+.world-label span { padding: 0 var(--space-1); border-radius: var(--radius-pill); background: color-mix(in oklab, var(--tone-work) 16%, var(--surface)); color: var(--ink); font-weight: 600; }
+.world-label b { background: var(--tone-wait); color: var(--on-wait); border-radius: var(--radius-pill); padding: 0 var(--space-1); font-weight: 600; }
+.world-label em { font-style: normal; background: var(--tone-done); color: var(--paper); border-radius: var(--radius-pill); padding: 0 var(--space-1); font-weight: 600; }
+/* A subject's open pull requests (./sign-nodes.ts): a bar each, filled as its checks end, in the tone the map
+   gives its mark (.tone-*, components.css). Where the sign is its pictogram alone, the gauge is a pill of its own. */
+.world-pulls { display: inline-flex; align-items: center; gap: 3px; flex: none; }
+.world-pulls i { position: relative; width: 22px; height: 6px; border-radius: var(--radius-pill); background: color-mix(in oklab, var(--c) 24%, var(--surface)); overflow: hidden; }
+.world-pulls i::after { content: ""; position: absolute; inset: 0; background: var(--c); transform-origin: 0 50%; transform: scaleX(var(--done)); }
+.world-pulls small { color: var(--ink); font: 600 var(--text-2xs)/1 var(--sans); }
+:is(.world-layer[data-level="0"] .world-sign, .world-sign.world-mini) .world-pulls { padding: var(--space-1) 5px; border-radius: var(--radius-pill); background: var(--surface); box-shadow: var(--shadow-1); }
+/* The compass: above the town's icon (the bottom right corner; on a phone the bottom left, over the phone's icon), seen only
+   while the camera is turned or tilted. */
+.world-compass { position: absolute; right: var(--gutter); bottom: calc(var(--gutter) + var(--control) + var(--space-2)); box-shadow: var(--shadow-1); opacity: 0; pointer-events: none; transition: opacity var(--dur-state) var(--ease), background-color var(--dur-state), border-color var(--dur-state), transform var(--dur-press) var(--ease); }
+.world-compass.turned { opacity: 1; pointer-events: auto; }
+@media (max-width: 600px) {
+	.world-compass { right: auto; left: var(--gutter); bottom: calc(var(--gutter) + var(--safe-bottom) + var(--space-4) + var(--control) + var(--space-2)); }
+}
+/* Above the figure's head: its bottom edge is the point signs.ts gives. */
+.world-name { display: inline-flex; translate: -50% -100%; padding: 1px var(--space-1) 1px var(--space-2); font-size: var(--text-2xs); line-height: 1.4; pointer-events: none; }
+.world-name.world-cut > span { max-width: 11em; overflow: hidden; text-overflow: ellipsis; }
+/* Its card says its name: the name over its head would lie under the card. */
+.world-name.world-carded { opacity: 0; }
+/* An inhabitant's card (./notebook.ts), over its head; `.under`, under its feet. Its tail points at the
+   inhabitant (--tail, from the card's left). It comes out of its inhabitant (the origin of its scale is its tail) in the
+   time of a menu, and goes faster. One width: from an inhabitant to another, and from the card to the notebook, only its
+   height changes. */
+.world-card { position: absolute; left: 0; top: 0; z-index: 2; width: 264px; border-radius: var(--radius-md); background: var(--surface); border: 1px solid var(--hairline); box-shadow: var(--shadow-2), var(--edge); color: var(--ink); font: 400 var(--text-sm)/1.4 var(--sans); pointer-events: none; opacity: 0; scale: var(--pop-scale); transform-origin: var(--tail, 50%) 100%; transition: opacity var(--dur-menu-out) var(--ease), scale var(--dur-menu-out) var(--ease); }
+.world-card.under { transform-origin: var(--tail, 50%) 0; }
+.world-card.shown { opacity: 1; scale: 1; transition-duration: var(--dur-menu); }
+/* A pinned notebook is a control of its own: its cross and its button take the pointer. */
+.world-card.world-pinned { pointer-events: auto; }
+.world-card::after { content: ""; position: absolute; left: var(--tail, 50%); bottom: -5px; width: 9px; height: 9px; margin-left: -5px; rotate: 45deg; background: var(--surface); border: solid var(--hairline); border-width: 0 1px 1px 0; }
+.world-card.under::after { bottom: auto; top: -5px; border-width: 1px 0 0 1px; }
+/* Its body keeps what it holds inside while its height changes, and its lines stay together at its top. */
+.world-card-body { position: relative; display: grid; align-content: start; gap: var(--space-1); padding: var(--space-3) var(--space-4); border-radius: inherit; overflow: hidden; }
+/* What the card said of the inhabitant it leaves, over what it says of the next, while it fades. */
+.world-card-ghost { position: absolute; inset: var(--space-3) var(--space-4) auto; pointer-events: none; }
+.world-card-now, .world-card-more { display: grid; align-content: start; gap: var(--space-1); min-width: 0; }
+.world-card-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); min-width: 0; }
+.world-card-head strong { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+/* The cross keeps the system's size, and the name's line its height. */
+.world-card-close { flex: none; margin: -6px -10px -6px 0; }
+.world-card .wait-line { margin: 0; font-size: var(--text-sm); }
+.world-card-say { margin: 0; color: var(--ink-soft); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
+.world-card .session-marks { margin-top: var(--space-1); }
+.world-card-past { display: grid; gap: 2px; margin: var(--space-2) 0 0; padding: var(--space-2) 0 0; border-top: 1px solid var(--hairline); list-style: none; font-size: var(--text-xs); color: var(--ink-soft); }
+/* The times take the room of the widest one ("09:58 AM", "mar. 14:02"), and the texts start on one line. */
+.world-card-past { grid-template-columns: auto minmax(0, 1fr); column-gap: var(--space-2); }
+.world-card-past li { display: grid; grid-template-columns: subgrid; grid-column: 1 / -1; }
+.world-card-past li.world-card-none { display: block; }
+.world-card-past time { white-space: nowrap; }
+.world-card-past time { font-variant-numeric: tabular-nums; color: var(--ink); }
+.world-card-past span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.world-card-open { justify-self: start; margin-top: var(--space-2); }
+@media (prefers-reduced-motion: reduce) { .world-card { scale: 1; transition: opacity var(--dur-tip) var(--ease); } }
+/* Over an inhabitant, the pointer says a click pins its notebook. */
+#town.world-pointing { cursor: pointer; }
+
+/* The block "Town" of a project's general screen (the place "sections" of "project-general"): a picture per style of
+   town (../assets/towns/), the one chosen ringed and checked, saved at once. */
+.town-style-hint { margin: 0; }
+.town-style-state:empty { display: none; }
+.town-style-state > * { margin-top: var(--space-3); }
+.town-tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(152px, calc((100% - 2 * var(--space-3)) / 3)), 1fr)); gap: var(--space-4) var(--space-3); margin-top: var(--space-1); }
+.town-tiles[aria-busy="true"] .town-tile { cursor: progress; }
+.town-tiles[aria-busy="true"] .town-tile[aria-checked="true"] { opacity: var(--disabled); }
+.town-tile { display: flex; flex-direction: column; gap: var(--space-2); min-width: 0; padding: 0; border: 0; border-radius: var(--radius-md); background: none; color: var(--ink); font: 500 var(--text-sm)/1.3 var(--sans); text-align: left; cursor: pointer; }
+.town-tile:focus-visible { outline: none; }
+.town-tile:focus-visible .town-frame { outline: var(--focus-width) solid var(--focus-color); outline-offset: calc(var(--focus-offset) + 2px); }
+.town-tile-name { display: flex; flex-wrap: wrap; column-gap: var(--space-1); min-width: 0; padding: 0 var(--space-1); }
+.town-tile-name small { align-self: center; font: 400 var(--text-xs)/1.3 var(--sans); color: var(--ink-soft); }
+
+/* The picture of a town, by day or by night as the page's theme: a frame whose rings show by their opacity. */
+.town-frame { position: relative; display: block; aspect-ratio: 5 / 4; border-radius: var(--radius-md); background: var(--surface); transition: transform var(--dur-press) var(--ease); }
+.town-frame img { display: block; width: 100%; height: 100%; object-fit: cover; border-radius: var(--radius-md); }
+.town-frame .town-night { display: none; }
+[data-theme="dark"] .town-frame .town-night { display: block; }
+[data-theme="dark"] .town-frame .town-day { display: none; }
+.town-frame::before, .town-frame::after { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; transition: opacity var(--dur-state) var(--ease); }
+.town-frame::before { box-shadow: inset 0 0 0 1px var(--hairline), var(--lift); }
+.town-frame::after { box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--ink); opacity: 0; }
+.town-tile[aria-checked="true"] .town-frame::after { opacity: 1; }
+.town-check { position: absolute; top: var(--space-2); right: var(--space-2); display: grid; place-items: center; width: var(--space-5); height: var(--space-5); border-radius: var(--radius-pill); background: var(--ink); color: var(--paper); opacity: 0; transform: scale(0.6); transition: opacity var(--dur-state) var(--ease), transform var(--dur-state) var(--ease); }
+.town-check svg { width: var(--glyph); height: var(--glyph); }
+.town-tile[aria-checked="true"] .town-check { opacity: 1; transform: none; }
+@media (hover: hover) and (pointer: fine) {
+	.town-tile:hover .town-frame { transform: translateY(-2px); }
+	.town-tile:hover .town-frame::before { box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--ink) 24%, transparent), var(--lift-hover); }
+}
+
+/* Sonar's draw before any town asked for it: the six styles it draws among. */
+.town-all { display: grid; grid-template-columns: repeat(3, 1fr); align-content: center; gap: var(--space-1); padding: var(--space-2); }
+.town-all img { height: auto; aspect-ratio: 5 / 4; object-fit: contain; border-radius: 0; }

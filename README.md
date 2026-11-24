@@ -6,6 +6,7 @@ Extensions for [Sonar](https://github.com/Krosnoz/sonar), one folder per extensi
 | --- | --- | --- |
 | [Pinned note](pinned-note/) | A note you write once in Settings: every agent can read it. The example extension. | `Krosnoz/sonar-extensions/pinned-note` |
 | [Statistics](statistics/) | Week by week: whether the work goes faster, whether the agents work well, what it costs and how much of your time it takes. | `Krosnoz/sonar-extensions/statistics` |
+| [Town](town/) | Turns the Map into an isometric town where you watch the agents at work. On a computer only. | `Krosnoz/sonar-extensions/town` |
 | [Jev](typesafe-jev/) | TypeSafe's model judges what your agents say: their cards' sentence and urgency, related agents, a session's topic, where a spoken sentence goes, the end-of-turn check. Paid by use, with a monthly cap. | `Krosnoz/sonar-extensions/typesafe-jev` |
 
 To install one in Sonar: Settings › Extensions › Add, then its install address. Sonar shows its card, then installs it switched off. Switch it on: it runs from Sonar's next start.
