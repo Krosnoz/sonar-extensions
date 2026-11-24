@@ -1,7 +1,7 @@
 // The styles of a town (family of houses, palette, trees, monument), and the one a project's town takes.
 import { styleKept } from "./style-kept";
 
-// The styles' names, as a project's settings keep them (WorldStyle of Sonar's domain): the town brings its own.
+// The styles' names, as the server part keeps them (./world.ts): the same as Sonar kept in a project's settings.
 export type WorldStyle = "riverside" | "brick" | "sun" | "neon" | "fjord" | "oasis";
 
 export type Style = {
@@ -91,7 +91,7 @@ export const STYLES: Style[] = [
 
 // FNV-1a: two close names fall far apart.
 const hash = (text: string): number => Array.from(text).reduce((h, c) => Math.imul(h ^ c.charCodeAt(0), 16777619) >>> 0, 2166136261);
-// The style of the project's town: the one its settings keep (./style-kept.ts); one its name picks while the server
+// The style of the project's town: the one the server part keeps (./style-kept.ts); one its name picks while the server
 // cannot be read, so that the town still opens.
 export const styleFor = (name: string): Style => {
 	const kept = styleKept(name);

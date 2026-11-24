@@ -11,7 +11,7 @@ export function el<K extends keyof HTMLElementTagNameMap>(tag: K, className = ""
 }
 
 // The glyph of an icon of Sonar's set, without the box the API wraps it in.
-const glyphOf = (name: string): Element | null => sonar().ui.icon(name).firstElementChild;
+export const glyphOf = (name: string): Element | null => sonar().ui.icon(name).firstElementChild;
 
 export function iconButton(icon: string, label: string, className = "icon"): HTMLButtonElement {
 	const button = el("button", className);

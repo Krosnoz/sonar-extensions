@@ -1,5 +1,5 @@
-// `bun run build`: writes dist/, the extension's folder as Sonar lays it (its card, its page entry and the parts of the
-// build it imports later, its sheet, its images and sounds), then release/, the two files of a GitHub release:
+// `bun run build`: writes dist/, the extension's folder as Sonar lays it (its card, its server entry, its page entry and
+// the parts of the build it imports later, its sheet, its images and sounds), then release/, the two files of a GitHub release:
 // extension.tar.gz (dist/ packed here) and extension.json (the card, with the archive's SHA-256). Sonar builds nothing
 // and installs no dependency. Runs on Windows, macOS and Linux, without the system's tar.
 
@@ -23,6 +23,11 @@ if (!built.success) throw new AggregateError(built.logs, "Could not build src/pa
 const entry = built.outputs.find((output) => output.kind === "entry-point");
 if (!entry || basename(entry.path) !== source.page) throw new Error(`The page entry is not ${source.page}.`);
 const parts = built.outputs.filter((output) => output.kind === "chunk").map((output) => basename(output.path)).sort();
+
+// The server entry runs in Sonar's server (Bun): one file, Node's modules left as imports.
+const server = await Bun.build({ entrypoints: [join(root, "src/server.ts")], outdir: dist, target: "node", format: "esm", minify: true });
+if (!server.success) throw new AggregateError(server.logs, "Could not build src/server.ts");
+if (server.outputs.length !== 1 || basename(server.outputs[0]!.path) !== source.server) throw new Error(`The server entry is not ${source.server} alone.`);
 
 // The images and sounds the card names, from assets/.
 copyFileSync(join(root, "src/page.css"), join(dist, source.styles));
@@ -74,5 +79,5 @@ const kib = (bytes: number) => `${(bytes / 1024).toFixed(1)} KiB`;
 const partsSize = parts.reduce((sum, part) => sum + statSync(join(dist, part)).size, 0);
 console.log(
 	`${card.id} ${card.version}: dist/ and release/ written, sha256 ${sha256}\n` +
-		`  ${source.page} ${kib(statSync(join(dist, source.page)).size)}, ${parts.length} parts ${kib(partsSize)}, archive ${kib(archive.length)}`,
+		`  ${source.page} ${kib(statSync(join(dist, source.page)).size)}, ${parts.length} parts ${kib(partsSize)}, ${source.server} ${kib(statSync(join(dist, source.server)).size)}, archive ${kib(archive.length)}`,
 );

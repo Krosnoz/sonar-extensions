@@ -9,7 +9,7 @@ import type { Agent, Kit, Topic } from "./kit";
 import { THREE } from "./nodes";
 import type { Part } from "./parts";
 
-// The town's modules read the page's storage and address (../state.ts).
+// The town's modules read the page's storage and address (./test-page.ts sets them the same way).
 const page = globalThis as Record<string, unknown>;
 page["localStorage"] ??= { getItem: () => null };
 page["location"] ??= { href: "http://127.0.0.1/" };

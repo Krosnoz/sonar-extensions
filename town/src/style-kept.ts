@@ -1,5 +1,6 @@
-// By project: the style of its town its settings keep, as ./town-style.ts read it before the town is built. Apart from
-// both: the page's first code reads the settings, the town's own code (loaded on demand) draws the style.
+// By project: the style of its town the server part keeps, as ./town-style.ts read it before the town is built, or as
+// the block "Town" saved it. Apart from both: the page's entry reads the style, the town's own code (loaded on demand)
+// draws it.
 
 import type { WorldStyle } from "./styles";
 

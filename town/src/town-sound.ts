@@ -1,5 +1,5 @@
 // The town's sound: a short sound for each true event of the open town seen on the screen, silence otherwise, and no
-// sound under it. Each is one of Sonar's sounds (../sounds/sounds.ts), played lower than a moment's and tuned on C's
+// sound under it. Each is one of Sonar's sounds (the files of assets/sounds/), played lower than a moment's and tuned on C's
 // five notes, the key of Sonar's own sounds: two sounds heard together never clash. It is placed left or right where
 // its event shows, and quieter seen from far. What the screen does not show is not heard.
 // Nothing is made up: the town tells the ear only what it plays (./live-steps.ts, ./plot.ts, ./site-jobs.ts,

@@ -35,7 +35,7 @@ type Held = Pointed & {
 	high: number;
 };
 
-// As the page's tooltips (../ui/tooltip.ts): the wait before a card, none when another one showed just before.
+// As Sonar's tooltips: the wait before a card, none when another one showed just before.
 const [DELAY, WARM] = [350, 300];
 // How long a card stays after the pointer left its inhabitant, in ms: between two bodies of a crowd it blinked, and
 // the next one's card glides from it instead of coming anew.

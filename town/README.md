@@ -2,7 +2,7 @@
 
 Turns the Map into an isometric town where you watch the agents at work: a building per subject, an inhabitant per session, scaffolding for a pull request under test, a storey for each merge. On a computer only. It needs no key, calls no address and costs nothing.
 
-It has a page part only, and goes through the extension contract alone: it imports nothing of Sonar, and draws with [three.js](https://threejs.org) (WebGPU, else WebGL 2).
+It has a page part and a server part, and goes through the extension contract alone: it imports nothing of Sonar, and draws with [three.js](https://threejs.org) (WebGPU, else WebGL 2).
 
 ## What it shows, and where
 
@@ -11,8 +11,9 @@ It has a page part only, and goes through the extension contract alone: it impor
 | The Map | `tools` | The town's icon among the Map's tools. Its first touch builds the town from the Map's cards (`api.map`), over the Map it covers (`map.cover`); a second brings the Map back. While the town shows, the icon stands in the bottom right corner. |
 | | `layer` | The town itself, and the icon of a phone's Map, which has no tools. |
 | Settings › Sounds | | A section of the town's four sounds (`api.sounds`): bricks laid, a merge, a pull request under test, an inhabitant who comes or goes. |
+| A project's General screen | `sections` | The block "Town" (`ui.section`): the style of the project's town, a picture per style, and first "Automatic". A choice is saved at once; a town open in another style closes, and its next opening builds the style chosen ([`src/town-style-pane.ts`](src/town-style-pane.ts)). |
 
-The icon shows only where the machine can draw the whole town ([`src/offered.ts`](src/offered.ts)): not on a phone or a tablet, not on a browser that draws on the processor. A machine that cannot hold it is told so once, and its icon comes back the next day.
+The icon and the block show only where the machine can draw the whole town ([`src/offered.ts`](src/offered.ts)): not on a phone or a tablet, not on a browser that draws on the processor. A machine that cannot hold it is told so once, and its icon comes back the next day.
 
 Its entry, [`src/page.ts`](src/page.ts), is a few KiB: three.js and the town are parts of the build of their own, loaded at the first pointer over the icon ([`src/toggle.ts`](src/toggle.ts)), never at the page's start. The build names them in the card's `files`, with the images and the sounds ([`assets/`](assets/)). Its sheet is [`src/page.css`](src/page.css).
 
@@ -20,11 +21,20 @@ Its entry, [`src/page.ts`](src/page.ts), is a few KiB: three.js and the town are
 
 `sonar:town-unheld`: when this machine did not hold the town (a day without its icon). Two keys a test sets: `sonar:town-draw` (draw whatever the machine, at a tier) and `sonar:town-limit` (the longest an opening may take, in milliseconds).
 
-## Not yet
+## The style of each project's town
 
-The style of each project's town (the user's choice, or one drawn once for the project) and the block "Town" of a project's General screen: until then, a town takes its style from its project's name ([`src/town-style.ts`](src/town-style.ts), [`src/styles.ts`](src/styles.ts)).
+Its server part ([`src/server.ts`](src/server.ts)) keeps the style of each project's town in its data folder, `styles.json` ([`src/style-store.ts`](src/style-store.ts)): the style the user chose, else one drawn once for the project, the style the fewest other projects' towns show, so that two towns differ without a setting. Its routes, under `/api/ext/town`:
+
+| Route | Body | Answer |
+| --- | --- | --- |
+| `GET /style?project=<name>` | | `{ style, drawn }`, each a style or `null`. A reading never draws. |
+| `POST /style` | `{ project, style }`: one of `riverside`, `brick`, `sun`, `neon`, `fjord`, `oasis`, or `automatic` (the draw) | `{ style, drawn }` as kept. |
+
+A project Sonar does not list answers 404; a body without a project, or another style, 400. The town's first opening asks for the draw; while the server cannot be read, the town takes a style from its project's name ([`src/town-style.ts`](src/town-style.ts), [`src/styles.ts`](src/styles.ts)).
+
+Sonar kept these styles in each project's settings file, under `world`, before the town became an extension. At each start, the server part takes them ([`src/style-left.ts`](src/style-left.ts)): a style the user chose in the extension stays; else the former value takes its place. A value it cannot read is set aside in `styles.json`, never lost. The field leaves the projects' files once `styles.json` is written.
 
 ## Develop it
 
 1. `bun install`, then `bun run check` (the types) and `bun test` (the tests, beside the code they test in `src/`).
-2. `bun run build` writes `dist/` (its card with `files`, `page.js` and its parts, `page.css`, the images and the sounds) and `release/` (`extension.json` with the archive's SHA-256, and `extension.tar.gz`).
+2. `bun run build` writes `dist/` (its card with `files`, `server.js`, `page.js` and its parts, `page.css`, the images and the sounds) and `release/` (`extension.json` with the archive's SHA-256, and `extension.tar.gz`).

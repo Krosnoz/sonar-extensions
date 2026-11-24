@@ -8,7 +8,7 @@ import { el, iconButton } from "./dom";
 import { dark, reducedMotion } from "./look";
 import type { Morph } from "./morph";
 import { cssEase, DUR, EASE_IN_OUT } from "./motion";
-import { offered, remembered, Unheld } from "./offered";
+import { remembered, Unheld } from "./offered";
 import { sonar } from "./sonar";
 import { offerSounds } from "./sound-lines";
 import { readMap, wantedOf } from "./sources";
@@ -62,7 +62,7 @@ function preparing(on: boolean): void {
 }
 
 // The map's icon goes down to the bottom right corner while the town shows, and back up among the map's tools: its place
-// is written at once, then it slides there on transform, measured before and after (as ../fleet/canvas/glide.ts).
+// is written at once, then it slides there on transform, measured before and after (as Sonar's Map glides its cards).
 function corner(on: boolean, slide = true): void {
 	const icon = buttons[0];
 	if (!icon || icon.classList.contains("cornered") === on) return;
@@ -117,7 +117,7 @@ async function open(): Promise<void> {
 	const stop = new AbortController();
 	const timer = setTimeout(() => stop.abort(new Unheld(`town: opening past ${openingLimit()} ms`)), openingLimit());
 	try {
-		// The town is built in the style its project's settings keep (./styles.ts#styleFor), read while its code loads.
+		// The town is built in the style the server part keeps for its project (./town-style.ts), read while its code loads.
 		const [{ morphIn }, style] = await Promise.all([import("./morph"), project ? townStyle(project) : undefined]);
 		// Empty while the server cannot be read: the style then comes from the project's name.
 		host.dataset["style"] = style ?? "";
@@ -206,8 +206,8 @@ function leave(): void {
 	whole();
 }
 
-// The project's settings keep another style than the one its town was built in: the page whole at once, and the next
-// opening builds the style kept.
+// The project's style is now another than the one its town was built in (./town-style-pane.ts): the page whole at
+// once, and the next opening builds the style kept.
 export function restyled(name: string, style: string): void {
 	if (town && built === name && host.dataset["style"] !== style) leave();
 }
@@ -239,15 +239,16 @@ function made(className: string): HTMLButtonElement {
 	return button;
 }
 
-// The icon in the map's tools, and one in a corner on a phone, whose map shows no tools (../page.css). The town and the
+// The icon in the map's tools, and one in a corner on a phone, whose map shows no tools (./page.css). The town and the
 // phone's icon are in the Map's layer, which Sonar lays before a session's panel: an open panel makes them inert, as the
 // rest of the page. Both icons are made first: the map's is the first of `buttons` (`corner`).
-export function wireTown(): void {
+// `here`: whether this machine is offered the town (./offered.ts), asked once by the entry.
+export function wireTown(here: Promise<boolean>): void {
 	const [mapIcon, phoneIcon] = [made("town-map"), made("town-phone")];
 	const { slots } = sonar();
 	slots.part({ screen: "map", place: "tools", mount: (node) => void node.append(mapIcon) });
 	slots.part({ screen: "map", place: "layer", mount: (node) => void node.append(host, phoneIcon) });
-	void offered().then((yes) => {
+	void here.then((yes) => {
 		// The settings show the town's sounds where the town is offered only: before its icon, which plays them.
 		if (yes) offerSounds();
 		// The answer, read by the page tests.

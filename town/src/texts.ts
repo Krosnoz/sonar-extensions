@@ -2,6 +2,7 @@
 // ./i18n-fr.ts. The entry says the language once (./start.ts): until then, English.
 
 import { french } from "./i18n-fr";
+import type { WorldStyle } from "./styles";
 
 const english = {
 	// The icon that turns the page into the town, and back.
@@ -35,6 +36,24 @@ const english = {
 		"town-merges": { name: "A merge, a storey done", hint: "Merged work goes up into the building" },
 		"town-pulls": { name: "A PR under test", hint: "Its scaffolding goes up; its tests fail" },
 		"town-people": { name: "An inhabitant comes or goes", hint: "A session opens or closes" },
+	},
+	// The block "Town" of a project's General screen (./town-style-pane.ts).
+	style: {
+		title: "Town",
+		hint: "The style of the buildings of this project's town.",
+		// What the choices are, for a screen reader.
+		label: "Style of the town",
+		automatic: "Automatic",
+		// Under the pointer, on the automatic choice.
+		automaticTip: "Sonar takes the style your other projects have least.",
+		names: { riverside: "Riverside", brick: "Brick", sun: "Sun", neon: "Neon", fjord: "Fjord", oasis: "Oasis" } satisfies Record<WorldStyle, string>,
+		// What the section says on its line: the style chosen, or the draw once the town asked for it.
+		values: (automatic: boolean, name: string) => (automatic ? (name ? `Automatic · ${name}` : "Automatic") : name),
+		saving: "Saving…",
+		failed: "The style is not saved.",
+		noAnswer: "The server did not answer.",
+		// After a save that failed; `style`: what the section's line says.
+		kept: (style: string) => `The town keeps the style ${style}.`,
 	},
 };
 

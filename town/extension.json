@@ -12,6 +12,7 @@
 			"description": "Change la Carte en ville isométrique, où tu vois les agents travailler. Sur ordinateur seulement."
 		}
 	},
+	"server": "server.js",
 	"page": "page.js",
 	"styles": "page.css",
 	"files": [

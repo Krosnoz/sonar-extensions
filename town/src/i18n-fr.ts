@@ -26,4 +26,17 @@ export const french = {
 		"town-pulls": { name: "Une PR en test", hint: "Son échafaudage se pose ; ses tests échouent" },
 		"town-people": { name: "Un habitant arrive ou part", hint: "Une session s'ouvre ou se ferme" },
 	},
+	style: {
+		title: "Ville",
+		hint: "Le style des bâtiments de la ville de ce projet.",
+		label: "Style de la ville",
+		automatic: "Automatique",
+		automaticTip: "Sonar prend le style que tes autres projets ont le moins.",
+		names: { riverside: "Rive", brick: "Brique", sun: "Soleil", neon: "Néon", fjord: "Fjord", oasis: "Oasis" },
+		values: (automatic: boolean, name: string) => (automatic ? (name ? `Automatique · ${name}` : "Automatique") : name),
+		saving: "Enregistrement…",
+		failed: "Le style n'est pas enregistré.",
+		noAnswer: "Le serveur n'a pas répondu.",
+		kept: (style: string) => `La ville garde le style ${style}.`,
+	},
 } satisfies Translation;
