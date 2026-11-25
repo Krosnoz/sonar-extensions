@@ -41,8 +41,10 @@ export async function openedTown(page: Page, bench: Bench): Promise<void> {
 // the same picture at each step: it took a camera still flying for one at rest (the roof 59 to 103 px aside, 22 to
 // 24/11). The hold ends once the town has drawn again: its next frame is the held clock's. That frame came 1 to 9 s
 // late on a calm machine (36 openings, 25/11), and a town opens eight times slower beside the merge queue's full
-// pass. Once in 37, no drawing came in two minutes, unexplained: the hold waits two minutes at most, then lets the
-// test go on as it did before.
+// pass. A town whose frame is already the held clock's draws with a jump, and not always with the first: measured once
+// in 60 openings, its frame came with the second only (25/11), and a hold that jumped once waited two minutes for nothing.
+// The clock jumps before each reading, a frame's time and little more. The hold waits two minutes at most, then
+// lets the test go on as it did before.
 export async function held(page: Page): Promise<void> {
 	await page.clock.install();
 	for (let attempt = 0; ; attempt++) {
@@ -57,10 +59,12 @@ export async function held(page: Page): Promise<void> {
 	const before = await drawings(page);
 	// No town on the page: nothing to wait for.
 	if (before < 0) return;
-	// The clock held, a frame of its own comes only with a jump.
-	await page.clock.fastForward(100);
 	await lastReading(
-		() => drawings(page),
+		async () => {
+			// The clock held, a frame of its own comes only with a jump: 16 ms at most ahead.
+			await page.clock.fastForward(20);
+			return drawings(page);
+		},
 		(count) => count > before,
 		120_000,
 	);
