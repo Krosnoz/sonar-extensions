@@ -1,0 +1,4 @@
+# The unit tests are beside the code they test. tests/ holds the page tests, run under Node (`bun run test:page`), and
+# tests/sonar, the link to a copy of Sonar they make: `bun test` would run Sonar's own tests through it.
+[test]
+root = "src"

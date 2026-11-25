@@ -1,3 +1,5 @@
 node_modules/
 dist/
 release/
+# The link to a copy of Sonar that town's page tests make (town/scripts/page-tests.ts).
+town/tests/sonar

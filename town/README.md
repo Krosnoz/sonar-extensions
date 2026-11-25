@@ -30,7 +30,7 @@ Its server part ([`src/server.ts`](src/server.ts)) keeps the style of each proje
 | `GET /style?project=<name>` | | `{ style, drawn }`, each a style or `null`. A reading never draws. |
 | `POST /style` | `{ project, style }`: one of `riverside`, `brick`, `sun`, `neon`, `fjord`, `oasis`, or `automatic` (the draw) | `{ style, drawn }` as kept. |
 
-A project Sonar does not list answers 404; a body without a project, or another style, 400. The town's first opening asks for the draw; while the server cannot be read, the town takes a style from its project's name ([`src/town-style.ts`](src/town-style.ts), [`src/styles.ts`](src/styles.ts)).
+Any project named is taken, whether Sonar lists it or not: a project the Map shows has a town. A request without a project, or another style, answers 400. The town's first opening asks for the draw; while the server cannot be read, the town takes a style from its project's name ([`src/town-style.ts`](src/town-style.ts), [`src/styles.ts`](src/styles.ts)).
 
 Sonar kept these styles in each project's settings file, under `world`, before the town became an extension. At each start, the server part takes them ([`src/style-left.ts`](src/style-left.ts)): a style the user chose in the extension stays; else the former value takes its place. A value it cannot read is set aside in `styles.json`, never lost. The field leaves the projects' files once `styles.json` is written.
 
@@ -38,3 +38,23 @@ Sonar kept these styles in each project's settings file, under `world`, before t
 
 1. `bun install`, then `bun run check` (the types) and `bun test` (the tests, beside the code they test in `src/`).
 2. `bun run build` writes `dist/` (its card with `files`, `server.js`, `page.js` and its parts, `page.css`, the images and the sounds) and `release/` (`extension.json` with the archive's SHA-256, and `extension.tar.gz`).
+
+How it is built: [`docs/architecture.md`](docs/architecture.md). What to check of it in Sonar, as a user: [`docs/verify.md`](docs/verify.md).
+
+## Page tests
+
+[`tests/page/`](tests/page/) plays the town in Sonar's page, in Chromium, on Sonar's page bench (an isolated Sonar with a fake `claude`), the extension laid from `release/` at this repository's root. They need:
+
+- a copy of [Sonar's repository](https://github.com/Krosnoz/sonar), after `bun install` in it;
+- what Sonar's own page tests need, as its `CONTRIBUTING.md` lists it: Node 22.18 or later, Playwright's Chromium (`bunx playwright-core install chromium`), and on Windows the C# compiler of .NET Framework 4, for the fake `claude`.
+
+In this folder:
+
+```sh
+SONAR_REPO=<the folder of the copy of Sonar> bun run test:page                         # every file
+SONAR_REPO=<the folder of the copy of Sonar> bun run test:page world-tools.page.ts     # one file
+```
+
+The command builds the release first when it is missing or older than the extension's files, and checks the tests' types (`bun run check:page` does that alone). Each file runs as Sonar's `bun run verify` runs its own: under Node, in a temporary home, a file that fails run again alone at the end. One file at a time, 1 to 4 minutes each: about 40 minutes for all of them; `--jobs 2` runs two at once, on a machine with memory to spare (a file takes about 1.6 GB).
+
+The tests import Sonar's test helpers through `tests/sonar`, a link to the copy `SONAR_REPO` names, which the command makes and git ignores. Without `SONAR_REPO`, the command says so and exits with 2.

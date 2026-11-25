@@ -5,7 +5,9 @@
 	"scripts": {
 		"build": "bun scripts/build.ts",
 		"check": "tsc",
-		"test": "bun test"
+		"check:page": "bun scripts/page-tests.ts --types",
+		"test": "bun test",
+		"test:page": "bun scripts/page-tests.ts"
 	},
 	"dependencies": {
 		"three": "0.187.0"
