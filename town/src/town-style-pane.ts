@@ -40,9 +40,16 @@ function failure(title: string, hint: string): HTMLElement {
 	return box;
 }
 
-// The choice saved, as the server keeps it; a refusal throws its reason.
+// The choice saved, as the server keeps it; a refusal throws its reason. A server out of reach makes the browser's
+// fetch throw a TypeError in its own words ("Failed to fetch"): it is said as a server that did not answer, as Sonar's
+// own forms say it.
 const saved = async (project: string, style: Choice): Promise<World> => {
-	const world = worldOf(await sonar().http.post("/style", { project, style }));
+	const answer = await sonar()
+		.http.post("/style", { project, style })
+		.catch((error: unknown) => {
+			throw error instanceof TypeError ? new Error(worldTexts.style.noAnswer) : error;
+		});
+	const world = worldOf(answer);
 	if (!world) throw new Error(worldTexts.style.noAnswer);
 	return world;
 };
