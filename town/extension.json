@@ -15,6 +15,7 @@
 	"server": "server.js",
 	"page": "page.js",
 	"styles": "page.css",
+	"icon": "icon.svg",
 	"files": [
 		"sounds/bubble.mp3",
 		"sounds/pluck.mp3",

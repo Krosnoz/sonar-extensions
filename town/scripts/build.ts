@@ -29,9 +29,9 @@ const server = await Bun.build({ entrypoints: [join(root, "src/server.ts")], out
 if (!server.success) throw new AggregateError(server.logs, "Could not build src/server.ts");
 if (server.outputs.length !== 1 || basename(server.outputs[0]!.path) !== source.server) throw new Error(`The server entry is not ${source.server} alone.`);
 
-// The images and sounds the card names, from assets/.
+// The icon, the images and the sounds the card names, from assets/.
 copyFileSync(join(root, "src/page.css"), join(dist, source.styles));
-for (const path of source.files as string[]) {
+for (const path of [source.icon, ...source.files] as string[]) {
 	mkdirSync(join(dist, dirname(path)), { recursive: true });
 	copyFileSync(join(root, "assets", path), join(dist, path));
 }
