@@ -125,8 +125,10 @@ export type ServerApi = {
 	// history: calls close together share one measure).
 	// `left`: a field of the projects' own settings files that this Sonar does not know (one a part of Sonar kept there
 	// before it left for an extension), as each project's file holds it, for those that do; Sonar keeps such a field as
-	// it is; its value is what the file holds, to be checked by who reads it. `forget`: the field leaves every project's
-	// file, once taken. A field Sonar knows is neither given nor forgotten. A Sonar older than them has neither.
+	// it is; its value is what the file holds, to be checked by who reads it. A project `list` gives is named as there;
+	// another one (a folder of sessions never listed) by its file's name: its name, each character outside letters,
+	// digits, ".", "_" and "-" written "_". `forget`: the field leaves every project's file, once taken: each was given.
+	// A field Sonar knows is neither given nor forgotten. A Sonar older than them has neither.
 	readonly projects: {
 		readonly list: () => Promise<readonly ProjectLine[]>;
 		readonly trust: () => Promise<readonly ProjectTrust[]>;

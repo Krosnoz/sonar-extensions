@@ -9,8 +9,8 @@ import type { Port } from "./ports";
 import { isPort, isReadFamily } from "./rules";
 
 // The ids an extension never takes: the core's words (its routes and files live under /api/ext/<id> and /ext/<id>),
-// then the ids of the plugins Sonar ships or shipped (`stats`, `jev`: an older Sonar's switch of that id stays the
-// former plugin's). Written here, so that this package depends on nothing: a test of Sonar's
+// then the ids of the plugins Sonar ships or shipped (`stats`, `jev`, `world`: the ids of former plugins of the core;
+// an older Sonar's switch of that id, left in a user's settings, stays the former plugin's). Written here, so that this package depends on nothing: a test of Sonar's
 // keeps every id of PLUGIN_IDS (@sonar/domain) in it (tests/extension-manifest.test.ts).
 export const RESERVED_IDS: readonly string[] = [
 	"core",
