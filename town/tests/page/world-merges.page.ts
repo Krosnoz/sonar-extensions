@@ -81,9 +81,21 @@ async function netOver(one: Buffer, other: Buffer, rows: [number, number]): Prom
 }
 
 // The town of project alpha, its subject with `merges` merges, read once its camera rests. `framed`: the roof its
-// picture is taken from, another town's for two pictures that compare pixel by pixel (its own by default).
-async function townOf(merges: number, framed?: { x: number; y: number }): Promise<{ x: number; y: number }> {
+// picture is taken from, another town's for two pictures that compare pixel by pixel (its own by default). `late`: the
+// frame the town has asked for when its clock is held comes that many ms late, as on a machine short of processor.
+async function townOf(merges: number, { framed, late = 0 }: { framed?: { x: number; y: number }; late?: number } = {}): Promise<{ x: number; y: number }> {
 	const { page, errors } = await told(browser, DESKTOP, (agent) => ({ ...agent, topicMerges: merges }), "light");
+	if (late)
+		await page.addInitScript(() => {
+			// The page's own frames and timers, taken before the held clock replaces them.
+			const [frame, later] = [window.requestAnimationFrame.bind(window), window.setTimeout.bind(window)];
+			window.requestAnimationFrame = (callback) =>
+				frame((at) => {
+					const ms = (window as unknown as { lateFrame?: number }).lateFrame ?? 0;
+					if (ms) later(() => callback(performance.now()), ms);
+					else callback(at);
+				});
+		});
 	await page.addInitScript(() => {
 		localStorage.setItem("sonar:view", "map");
 		localStorage.setItem("sonar:town-limit", "300000");
@@ -108,6 +120,7 @@ async function townOf(merges: number, framed?: { x: number; y: number }): Promis
 	await page.locator(".zoom .town-toggle").click();
 	await page.locator("#town .world-layer.shown").waitFor({ state: "attached", timeout: 300_000 });
 	await page.locator("#town:not(.moving)").waitFor({ state: "attached", timeout: 90_000 });
+	if (late) await page.evaluate((ms) => void ((window as unknown as { lateFrame?: number }).lateFrame = ms), late);
 	// The town's time is the test's from here: each jump is one drawing (see ./world-pulls.page.ts).
 	await held(page);
 	let roof = await roofOf(page);
@@ -122,7 +135,10 @@ async function townOf(merges: number, framed?: { x: number; y: number }): Promis
 	assert.ok(roof && same === 3, `the town shows its subject's sign, and its camera rests (${JSON.stringify(roof)})`);
 	assert.deepEqual(await drawnOver(page, "#town .world-sign"), []);
 	const from = framed ?? roof;
-	pictures.set(merges, await page.screenshot({ clip: { x: Math.round(from.x - 90), y: Math.round(from.y - 20), width: 180, height: 150 } }));
+	// The picture comes after the drawings the rest asked for, seconds each in the test's browser: beside the merge
+	// queue's full pass it took more than Playwright's 30 s (25/11). The limit is the one the town has to open.
+	const clip = { x: Math.round(from.x - 90), y: Math.round(from.y - 20), width: 180, height: 150 };
+	pictures.set(merges, await page.screenshot({ clip, timeout: 300_000 }));
 	assert.deepEqual(errors, []);
 	await page.close();
 	return roof;
@@ -132,7 +148,10 @@ async function townOf(merges: number, framed?: { x: number; y: number }): Promis
 // its town whole (4 px aside and a storey 2 px smaller at four, measured 21/11), and the roofs no longer compare.
 test("computer: a subject's building rises a storey each time its merges double", async () => {
 	const none = await townOf(0);
-	const one = await townOf(1);
+	// This town draws 3 s late when its clock is held, as beside other page files: its camera still flies then, and the
+	// test must wait for its rest. Before, it read the same frame three times, took the flight for a rest, and found
+	// the roof 59 to 103 px aside (22 to 24/11).
+	const one = await townOf(1, { late: 3000 });
 	const three = await townOf(3);
 	const said = JSON.stringify([none, one, three]);
 	assert.ok(Math.abs(one.x - none.x) < 1 && Math.abs(three.x - none.x) < 1, `the building stands where it stood (${said})`);
@@ -141,7 +160,7 @@ test("computer: a subject's building rises a storey each time its merges double"
 	assert.ok(Math.abs(two / storey - 2) < 0.1, `3 merges raise it two storeys (${said})`);
 	// Between two doublings, the roof stands over the storey to come, of which each merge lays its share: with 2 merges
 	// it is as high as with 3, which finish that storey.
-	const between = await townOf(2, three);
+	const between = await townOf(2, { framed: three });
 	assert.ok(
 		Math.abs(between.y - three.y) < 1.5 && Math.abs(between.x - three.x) < 1.5,
 		`2 merges lift the roof over the storey to come (${JSON.stringify(between)}, ${said})`,

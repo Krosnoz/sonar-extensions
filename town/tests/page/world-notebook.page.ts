@@ -131,7 +131,12 @@ async function away(page: Page): Promise<void> {
 // The town opened near an inhabitant that waits, its clock held, the pointer away: the session's handle and name, and
 // where its body is on the screen.
 async function nearby(page: Page): Promise<{ handle: string; title: string; body: [number, number] }> {
-	await page.addInitScript(() => localStorage.setItem("sonar:view", "map"));
+	await page.addInitScript(() => {
+		localStorage.setItem("sonar:view", "map");
+		// The town gives its opening up after a minute (src/toggle.ts): beside another page file it takes longer in the
+		// test's browser, and the town left under the test (no card in the page, 25/11).
+		localStorage.setItem("sonar:town-limit", "300000");
+	});
 	await lightTown(page);
 	await page.goto(`${bench.base}/?projet=alpha`);
 	// An agent that waits stands still: the pointer finds it where it was read.

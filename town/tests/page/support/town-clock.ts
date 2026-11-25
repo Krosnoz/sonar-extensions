@@ -2,7 +2,7 @@
 // ../world-pulls.page.ts).
 
 import type { Page } from "playwright-core";
-import { animationsEnded, type Bench } from "../../sonar/tests/page/support/bench.ts";
+import { animationsEnded, type Bench, lastReading } from "../../sonar/tests/page/support/bench.ts";
 import { lightTown } from "./town-draw.ts";
 
 // The town of project alpha opens over its map, and its clock is held.
@@ -36,17 +36,52 @@ export async function openedTown(page: Page, bench: Bench): Promise<void> {
 // clock runs until it is held, and a drawing costs the test's browser more than a second: on a busy machine the ten
 // seconds pass too between the reading and the hold, which Playwright refuses ("to the past"). The time is read again
 // then.
+// The frame the town asked for before the hold is the browser's own, not the held clock's: on a busy machine it comes
+// seconds late, and until it has come no jump of the clock draws the town. A test that stepped the clock then read
+// the same picture at each step: it took a camera still flying for one at rest (the roof 59 to 103 px aside, 22 to
+// 24/11). The hold ends once the town has drawn again: its next frame is the held clock's. That frame came 1 to 9 s
+// late on a calm machine (36 openings, 25/11), and a town opens eight times slower beside the merge queue's full
+// pass. Once in 37, no drawing came in two minutes, unexplained: the hold waits two minutes at most, then lets the
+// test go on as it did before.
 export async function held(page: Page): Promise<void> {
 	await page.clock.install();
 	for (let attempt = 0; ; attempt++) {
 		try {
 			// oxlint-disable-next-line no-await-in-loop
 			await page.clock.pauseAt((await page.evaluate(() => Date.now())) + 10_000);
-			return;
+			break;
 		} catch (error) {
 			if (attempt === 4 || !String(error).includes("to the past")) throw error;
 		}
 	}
+	const before = await drawings(page);
+	// No town on the page: nothing to wait for.
+	if (before < 0) return;
+	// The clock held, a frame of its own comes only with a jump.
+	await page.clock.fastForward(100);
+	await lastReading(
+		() => drawings(page),
+		(count) => count > before,
+		120_000,
+	);
+}
+
+// How many times the town has drawn since this was first asked: each drawing writes its level on its layer
+// (src/view-frames.ts#loop). -1 without a town.
+function drawings(page: Page): Promise<number> {
+	return page.evaluate(() => {
+		const layer = document.querySelector("#town .world-layer");
+		const kept = window as unknown as { townDrawings?: number };
+		if (!layer) return -1;
+		if (kept.townDrawings === undefined) {
+			kept.townDrawings = 0;
+			new MutationObserver((records) => (kept.townDrawings = (kept.townDrawings ?? 0) + records.length)).observe(layer, {
+				attributes: true,
+				attributeFilter: ["data-level"],
+			});
+		}
+		return kept.townDrawings;
+	});
 }
 
 // The town's clock goes on by half seconds, one drawing each: a site's own step is no longer
