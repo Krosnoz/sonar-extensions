@@ -7,13 +7,10 @@ import { join } from "node:path";
 const RELEASE = join(import.meta.dirname, "..", "..", "..", "..", "release");
 
 const more = (name: string, value: string) => (process.env[name] = [process.env[name], value].filter(Boolean).join(","));
-// Called before the bench starts: the bench lays the extension, switched on. A copy of Sonar that still has its own town
-// (its plugin "world") would give two icons and each sound's line twice: the plugin is switched off, which changes
-// nothing on a Sonar without it.
+// Called before the bench starts: the bench lays the extension, switched on.
 export function inTownMode(): void {
 	process.env["BENCH_RELEASE"] = RELEASE;
 	more("BENCH_RELEASE_EXTENSIONS", "town");
-	more("BENCH_PLUGINS_OFF", "world");
 }
 
 // A project's town style, as the extension's server part keeps it.
