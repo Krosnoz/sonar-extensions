@@ -58,3 +58,7 @@ SONAR_REPO=<the folder of the copy of Sonar> bun run test:page world-tools.page.
 The command builds the release first when it is missing or older than the extension's files, and checks the tests' types (`bun run check:page` does that alone). Each file runs as Sonar's `bun run verify` runs its own: under Node, in a temporary home, a file that fails run again alone at the end. One file at a time, 1 to 4 minutes each: about 40 minutes for all of them; `--jobs 2` runs two at once, on a machine with memory to spare (a file takes about 1.6 GB).
 
 The tests import Sonar's test helpers through `tests/sonar`, a link to the copy `SONAR_REPO` names, which the command makes and git ignores. Without `SONAR_REPO`, the command says so and exits with 2.
+
+## License
+
+MIT. Its archive ships three.js: its license is in [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).
