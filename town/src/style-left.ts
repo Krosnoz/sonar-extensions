@@ -8,7 +8,7 @@
 // the same styles. A Sonar that still knows the field gives none; an older one has no `left`: nothing to take.
 
 import type { ServerApi } from "@sonar/extension";
-import type { Kept } from "./style-store";
+import { type Kept, keyOf } from "./style-store";
 import { type World, worldOf } from "./world";
 
 export const FIELD = "world";
@@ -19,7 +19,8 @@ type Left = readonly { readonly project: string; readonly value: unknown }[];
 export function takenIn(kept: Kept, left: Left): Kept {
 	const projects: Record<string, World> = { ...kept.projects };
 	const setAside: Record<string, unknown> = { ...kept.setAside };
-	for (const { project, value } of left) {
+	for (const { project: name, value } of left) {
+		const project = keyOf(name);
 		const former = worldOf(value);
 		if (!former) setAside[project] = value;
 		else if (!projects[project]?.style && (former.style || former.drawn)) projects[project] = former;

@@ -51,6 +51,18 @@ test("the styles Sonar kept are taken, then their field leaves the projects' fil
 	expect(made.left).toEqual([]);
 });
 
+// Sonar kept a project's style in a file named after it, each character outside letters, digits, ".", "_" and "-"
+// written "_". It gives a project it lists by its name, and another one by that file's name.
+test("a style taken is found by its project's name, whatever its characters, listed by Sonar or not", async () => {
+	const made = bench({ "Mon Projet": { style: null, drawn: "sun" }, my_folder: { style: "neon", drawn: null } });
+	await made.start(start);
+	expect((await made.get("/style", { project: "Mon Projet" })).body).toEqual({ style: null, drawn: "sun" });
+	expect((await made.get("/style", { project: "my folder" })).body).toEqual({ style: "neon", drawn: null });
+	// Two names Sonar kept in one file share one town style, as they did.
+	expect((await made.post("/style", { project: "my/folder", style: "brick" })).body).toEqual({ style: "brick", drawn: null });
+	expect((await made.get("/style", { project: "my folder" })).body).toEqual({ style: "brick", drawn: null });
+});
+
 test("a style chosen in the extension wins; one it only drew gives way", async () => {
 	const kept = { projects: { alpha: { style: "brick", drawn: null }, beta: { style: null, drawn: "sun" } } };
 	const made = bench({ alpha: { style: "neon" }, beta: { style: "oasis", drawn: "riverside" } }, kept);

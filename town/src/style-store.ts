@@ -13,6 +13,11 @@ export type Kept = { readonly projects: Readonly<Record<string, World>>; readonl
 
 const EMPTY: Kept = { projects: {}, setAside: {} };
 
+// A project's key in the styles: its name as Sonar wrote its settings file's, each character outside letters, digits,
+// ".", "_" and "-" written "_". Sonar gives a project it does not list by that name (`projects.left`), and two names
+// it kept in one file share one town style, as they did.
+export const keyOf = (project: string): string => project.replace(/[^a-zA-Z0-9._-]/g, "_");
+
 // What the file holds. None yet: nothing kept. A file that cannot be read is moved aside, and the styles start empty.
 export async function readKept(dataDir: string, log: (message: string) => void): Promise<Kept> {
 	const path = join(dataDir, "styles.json");

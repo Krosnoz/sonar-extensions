@@ -7,7 +7,7 @@
 
 import type { Json, RouteRequest, ServerApi } from "@sonar/extension";
 import { takeLeft } from "./style-left";
-import { type Kept, readKept, writeKept } from "./style-store";
+import { type Kept, keyOf, readKept, writeKept } from "./style-store";
 import { isStyle, leastTaken, NONE, shownOf, type World } from "./world";
 
 const refused = (message: string, status: number) => Object.assign(new Error(message), { status });
@@ -17,10 +17,10 @@ const answerOf = (world: World): Json => ({ style: world.style, drawn: world.dra
 const isFields = (body: Json | undefined): body is { readonly [key: string]: Json } => typeof body === "object" && body !== null && !Array.isArray(body);
 
 // Any project the Map shows has a town, whether or not the user named it in Sonar's projects: its sessions' folder
-// names it. So any name is taken, as Sonar's own settings took it.
+// names it. So any name is taken, as Sonar's own settings took it. Returns its key in the styles.
 function named(project: unknown): string {
 	if (typeof project !== "string" || !project) throw refused("Name the project.", 400);
-	return project;
+	return keyOf(project);
 }
 
 // The world a choice gives: the draw keeps the style drawn before, else draws among the other projects' towns kept, as
