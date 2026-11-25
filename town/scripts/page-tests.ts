@@ -85,7 +85,7 @@ for (const file of files) if (!existsSync(file)) fail(`${file} is not a page tes
 // What Sonar's own check does before it runs files (its tools/verify.ts): its fake `claude` built, the tests' processes
 // below normal priority, the fake agents kept at it.
 type Job = { name: string; cmd: string[] };
-type Outcome = { name: string; ok: boolean; unstable: boolean };
+type Outcome = { name: string; ok: boolean; unstable: boolean; skipped: number };
 const from = async <T>(path: string): Promise<T> => (await import(pathToFileURL(join(sonar, path)).href)) as T;
 const { buildFakeClaude } = await from<{ buildFakeClaude: (root: string) => void }>("tools/verify/fake-bin.ts");
 const { stayLow } = await from<{ stayLow: () => void }>("packages/processes/src/index.ts");
@@ -102,6 +102,8 @@ const red = outcomes.filter((outcome) => !outcome.ok);
 const unstable = outcomes.filter((outcome) => outcome.unstable);
 const seconds = ((performance.now() - started) / 1000).toFixed(0);
 console.log(`\n${outcomes.length - red.length}/${outcomes.length} green, ${unstable.length} unstable, ${red.length} red · ${seconds} s, ${jobs} at a time.`);
+// A test skipped is said: a file green without its tests proves nothing.
+for (const outcome of outcomes.filter((each) => each.skipped)) console.log(`  ${outcome.skipped} skipped: ${outcome.name}`);
 for (const outcome of unstable) console.log(`  unstable: ${outcome.name}`);
 for (const outcome of red) console.log(`  red: ${outcome.name}`);
 process.exit(red.length ? 1 : 0);
