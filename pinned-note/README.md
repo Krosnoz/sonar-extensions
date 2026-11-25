@@ -16,6 +16,20 @@ It shows each part of an extension's contract once, with as little code as possi
 
 Sonar's documentation for extension authors: [`docs/extensions.md`](https://github.com/Krosnoz/sonar/blob/main/docs/extensions.md).
 
+## Where things are
+
+Laid out as every extension of this repository ([its README](../README.md#how-it-is-laid-out)).
+
+| Path | What is there |
+| --- | --- |
+| [`extension.json`](extension.json) | The card: what Sonar shows of the extension, and what it asks for. |
+| [`src/page.ts`](src/page.ts), [`src/page.css`](src/page.css) | The page part: its entry and its sheet. |
+| [`src/server.ts`](src/server.ts) | The server part: its entry. |
+| [`tests/`](tests/) | The tests of the server part. |
+| [`scripts/build.ts`](scripts/build.ts) | The build. |
+
+With more code, a part gets a folder beside its entry: `src/page/`, `src/server/`, and `src/shared/` for what both parts use.
+
 ## Develop it
 
 1. `bun install`, then `bun run check` (the types) and `bun test`.

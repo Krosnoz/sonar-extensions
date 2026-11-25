@@ -1,10 +1,10 @@
-// The page's figures (src/page/figures.ts), on the weeks the server computes (src/weeks.ts), as Sonar's
+// The page's figures (src/page/figures.ts), on the weeks the server computes (src/server/weeks.ts), as Sonar's
 // tests/stats-figures.test.ts: the current week is never compared, a sum is a mean of the weeks that measured it, and a
 // gap goes the good or the bad way. A measure a week did not take reads null: ./weeks.test.ts.
 
 import { expect, test } from "bun:test";
 import { compared, type Figure, gapOf, valueOf, type Week } from "../src/page/figures";
-import { statsWeeks } from "../src/weeks";
+import { statsWeeks } from "../src/server/weeks";
 
 const STARTS = ["2026-09-21", "2026-09-28", "2026-10-05", "2026-10-12"];
 const work = STARTS.map((_, at) => ({ cost: at, sessions: 1, interventions: 2, agentMs: 1000, waitedMs: 0, ends: 4, sentBack: at }));

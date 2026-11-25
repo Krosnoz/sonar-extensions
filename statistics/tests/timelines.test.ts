@@ -6,8 +6,8 @@
 import { expect, test } from "bun:test";
 import type { SessionTimeline, TaskLine } from "@sonar/extension";
 import type { Bench } from "@sonar/extension/testing";
-import { DAY_MS, dayOf } from "../src/calendar";
-import { layered, timelineFrom } from "../src/timelines";
+import { DAY_MS, dayOf } from "../src/server/calendar";
+import { layered, timelineFrom } from "../src/server/timelines";
 import { bodyOf, started, usageLine } from "./support";
 
 const NOW = Date.now();

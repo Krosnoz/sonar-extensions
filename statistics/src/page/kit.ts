@@ -1,5 +1,5 @@
 // What every block of the page reads: the API Sonar gives the page entry, the texts and formats of the page's language.
-// Kept once, as the entry starts (./page.ts); the blocks read it when they draw, never on import.
+// Kept once, as the entry starts (../page.ts); the blocks read it when they draw, never on import.
 
 import type { PageApi } from "@sonar/extension";
 import { type Formats, formatsOf } from "./format";

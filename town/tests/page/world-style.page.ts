@@ -1,4 +1,4 @@
-// The style of a project's town (src/town-style.ts): the town is built in the style the project's
+// The style of a project's town (src/page/style/town-style.ts): the town is built in the style the project's
 // settings keep. The first time, the page asks the server for Sonar's draw, which stays; a style the user chose shows
 // instead.
 

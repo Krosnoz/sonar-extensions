@@ -6,7 +6,7 @@
 import assert from "node:assert/strict";
 import { after, before, test } from "node:test";
 import type { Browser, Page } from "playwright-core";
-import { french as worldTexts } from "../../src/i18n-fr.ts";
+import { french as worldTexts } from "../../src/page/sonar/i18n-fr.ts";
 import { type Bench, DESKTOP, openPage, PHONE, settle, startBenchAndBrowser } from "../sonar/tests/page/support/bench.ts";
 import { unfinished } from "../sonar/tests/page/support/phone-finish-audit.ts";
 import { inTownMode } from "./support/town.ts";
@@ -46,7 +46,7 @@ async function open(device: typeof DESKTOP | typeof PHONE, dark = false, card?: 
 	return opened;
 }
 
-// What the dissolve left: the page's cover (src/cover.ts), a mask on a thing of the map.
+// What the dissolve left: the page's cover (src/page/arrival/cover.ts), a mask on a thing of the map.
 const masked = (page: Page): Promise<number> =>
 	page.evaluate(
 		() =>
@@ -213,7 +213,7 @@ test("computer: a figure's name is its card's name alone, without the marks besi
 	await page.close();
 });
 
-// The town is drawn whole or not offered (src/offered.ts): the test browser draws on its processor.
+// The town is drawn whole or not offered (src/page/sonar/offered.ts): the test browser draws on its processor.
 const offered = (page: Page, answer: string): Promise<unknown> =>
 	page.locator(`#town[data-offered='${answer}']`).waitFor({ state: "attached", timeout: 30_000 });
 

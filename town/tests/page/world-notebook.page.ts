@@ -1,7 +1,7 @@
-// An inhabitant's card and notebook (src/notebook.ts): while the pointer rests on an inhabitant, a card
+// An inhabitant's card and notebook (src/page/people/notebook.ts): while the pointer rests on an inhabitant, a card
 // says what its session is doing; a click pins it as its notebook, with what happened to it lately and a button that
 // opens its session. Before, the town said nothing of an inhabitant but its name. Who stands under a point is
-// src/note-under.test.ts's.
+// src/page/people/note-under.test.ts's.
 
 import assert from "node:assert/strict";
 import { after, before, test } from "node:test";
@@ -133,7 +133,7 @@ async function away(page: Page): Promise<void> {
 async function nearby(page: Page): Promise<{ handle: string; title: string; body: [number, number] }> {
 	await page.addInitScript(() => {
 		localStorage.setItem("sonar:view", "map");
-		// The town gives its opening up after a minute (src/toggle.ts): beside another page file it takes longer in the
+		// The town gives its opening up after a minute (src/page/sonar/toggle.ts): beside another page file it takes longer in the
 		// test's browser, and the town left under the test (no card in the page, 25/11).
 		localStorage.setItem("sonar:town-limit", "300000");
 	});

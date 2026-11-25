@@ -29,7 +29,7 @@ Under `/api/ext/statistics`:
 
 `/global` and `/project` are long to compute: a second reading gets the last computation at once, and the next one has the computation made meanwhile. `updatedAt` says when it was computed. A route without its `project` answers 400.
 
-The shapes are in [`src/shapes.ts`](src/shapes.ts).
+The shapes are in [`src/shared/shapes.ts`](src/shared/shapes.ts).
 
 ## What it reads
 
@@ -55,6 +55,21 @@ Measured against Sonar's own routes on the same data (Sonar's test `tests/server
 - The projects of `/global` come in the order of their first day of work; Sonar lists them in the order its index read their folders. The page sorts them by time and cost.
 - The trust is read as Sonar measured it last, kept 10 s: just after a change, a computation may show the proofs of a few seconds before.
 - Before Sonar has read its agents' files once since it started (`usage.days` gives `from: null`), no work is counted.
+
+## Where things are
+
+Laid out as every extension of this repository ([its README](../README.md#how-it-is-laid-out)).
+
+| Path | What is there |
+| --- | --- |
+| [`extension.json`](extension.json) | The card: what Sonar shows of the extension, and what it asks for. |
+| [`src/page.ts`](src/page.ts), [`src/page.css`](src/page.css) | The page part: its entry, which places the blocks in Sonar's screens, and its sheet. |
+| [`src/page/`](src/page/) | What the page draws. Start with the two screens, [`global-screen.ts`](src/page/global-screen.ts) and [`project-screen.ts`](src/page/project-screen.ts); the figures they show are in [`measures.ts`](src/page/measures.ts), the texts in [`texts.ts`](src/page/texts.ts). |
+| [`src/server.ts`](src/server.ts) | The server part: its entry, and its routes. |
+| [`src/server/`](src/server/) | What the routes compute. Start with [`read.ts`](src/server/read.ts), the statistics read now; the weeks are in [`weeks.ts`](src/server/weeks.ts), a project's sessions over 7 days in [`timelines.ts`](src/server/timelines.ts). |
+| [`src/shared/shapes.ts`](src/shared/shapes.ts) | What the routes answer, which both parts read. |
+| [`tests/`](tests/) | The tests. |
+| [`scripts/build.ts`](scripts/build.ts) | The build. |
 
 ## Develop it
 

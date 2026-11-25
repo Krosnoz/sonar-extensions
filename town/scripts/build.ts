@@ -16,7 +16,7 @@ mkdirSync(release, { recursive: true });
 const source = JSON.parse(readFileSync(join(root, "extension.json"), "utf8"));
 
 // The page entry runs in the browser. Split at each `import()`: three.js and the town are parts of their own, loaded at
-// the first touch of the town's icon (src/toggle.ts), never with the entry at the page's start. Each part is fetched
+// the first touch of the town's icon (src/page/sonar/toggle.ts), never with the entry at the page's start. Each part is fetched
 // beside the entry (/ext/<id>/<part>), so the card names them in `files`, with their hash.
 const built = await Bun.build({ entrypoints: [join(root, "src/page.ts")], outdir: dist, target: "browser", format: "esm", splitting: true, minify: true });
 if (!built.success) throw new AggregateError(built.logs, "Could not build src/page.ts");

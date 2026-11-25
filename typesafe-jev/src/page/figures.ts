@@ -1,8 +1,8 @@
-// What the page shows of Jev's usage over a period, from GET /usage (../cost.ts): the tile's amount, its calls and
+// What the page shows of Jev's usage over a period, from GET /usage (../shared/cost.ts): the tile's amount, its calls and
 // tokens, and the chart by day, as Sonar's plugin computes them (its usage/jev.ts and usage/series-labels.ts); and the
 // month's spending against its cap.
 
-import type { UsageReport } from "../cost";
+import type { UsageReport } from "../shared/cost";
 import type { Kit } from "./kit";
 
 export type Bar = { label: string; tick: string; value: number; amount: string; share: number };
@@ -17,7 +17,7 @@ function barOf(day: string, usd: number, count: number, kit: Kit): Omit<Bar, "sh
 }
 
 // The month's gauge (./cap.ts): its words, its share of the cap (null without a cap), its tone from 80 % of the cap,
-// and whether the month reached it, as the judge counts it (../judge.ts: a cap of 0 is always reached).
+// and whether the month reached it, as the judge counts it (../server/judge.ts: a cap of 0 is always reached).
 export type MonthFigure = { text: string; share: number | null; tone: "" | "near" | "full"; reached: boolean };
 const NEAR = 0.8;
 

@@ -22,7 +22,7 @@ The chart and the month's gauge are the extension's own (`src/page/chart.ts`, `s
 
 ## How it judges
 
-Each judgment is one call to TypeSafe's System One API, model `jev-latest`, as Sonar's plugin made it ([`src/questions.ts`](src/questions.ts)). The questions are in French whatever your language: Jev's thresholds were measured on these wordings ([`src/i18n-questions.ts`](src/i18n-questions.ts)). They name you by your name in Sonar's settings.
+Each judgment is one call to TypeSafe's System One API, model `jev-latest`, as Sonar's plugin made it ([`src/server/questions.ts`](src/server/questions.ts)). The questions are in French whatever your language: Jev's thresholds were measured on these wordings ([`src/server/i18n-questions.ts`](src/server/i18n-questions.ts)). They name you by your name in Sonar's settings.
 
 | Call | Question | Read as |
 | --- | --- | --- |
@@ -79,6 +79,21 @@ Its settings, `{ "on": true, "monthlyUsd": 2 }`, are in Sonar's settings file, u
 - It lends your key to a linked computer while its switch is on; the plugin lent it whenever it ran.
 - At its cap, the log tells you to turn it on again in its settings or raise its cap, and the page sends you to Services; the plugin named Sonar's setting `jevMonthlyUsd`.
 - Its card gives its short text and why its key is asked, in English and in French (`summary`, `why`, `translations`): Sonar shows them on its line in Settings › Extensions and on its key's card.
+
+## Where things are
+
+Laid out as every extension of this repository ([its README](../README.md#how-it-is-laid-out)).
+
+| Path | What is there |
+| --- | --- |
+| [`extension.json`](extension.json) | The card: what Sonar shows of the extension, and what it asks for. |
+| [`src/page.ts`](src/page.ts), [`src/page.css`](src/page.css) | The page part: its entry and its sheet. |
+| [`src/page/`](src/page/) | What the page draws. Start with [`services.ts`](src/page/services.ts), Jev's part of Services: its switch, its cap ([`cap.ts`](src/page/cap.ts)) and its usage ([`usage-view.ts`](src/page/usage-view.ts)). The texts are in [`texts.ts`](src/page/texts.ts). |
+| [`src/server.ts`](src/server.ts) | The server part: its entry, and its routes. |
+| [`src/server/`](src/server/) | Jev as Sonar's judge. Start with [`judge.ts`](src/server/judge.ts); the questions asked are in [`questions.ts`](src/server/questions.ts), the calls to TypeSafe in [`typesafe.ts`](src/server/typesafe.ts). |
+| [`src/shared/`](src/shared/) | What both parts read: what Jev cost ([`usage.ts`](src/shared/usage.ts), [`cost.ts`](src/shared/cost.ts)). |
+| [`tests/`](tests/) | The tests, and the fake TypeSafe they call. |
+| [`scripts/build.ts`](scripts/build.ts) | The build. |
 
 ## Develop it
 

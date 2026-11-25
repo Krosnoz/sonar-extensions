@@ -5,7 +5,7 @@
 // with a way to read again. Sonar's own blocks follow both states.
 
 import type { PartSlot } from "@sonar/extension";
-import type { GlobalStats } from "../shapes";
+import type { GlobalStats } from "../shared/shapes";
 import { compared, type Week } from "./figures";
 import { kit } from "./kit";
 import { figures } from "./measures";

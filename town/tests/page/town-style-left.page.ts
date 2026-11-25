@@ -1,5 +1,5 @@
 // The styles Sonar kept before the town left it for this extension: each project's settings file holds them under
-// `world`. At Sonar's next start, the extension's server part takes them (src/style-left.ts): a project Sonar lists by
+// `world`. At Sonar's next start, the extension's server part takes them (src/server/style-left.ts): a project Sonar lists by
 // its name, a folder of sessions it never listed by its file's name. The field then leaves Sonar's files, what else
 // they hold stays, and each project's town keeps its style. On Sonar's page bench, with a Sonar that no longer knows
 // the field: one that still does gives it to no extension.

@@ -1,8 +1,8 @@
-// A merge told while the town is open is laid on its subject's building (src/sites.ts): a crane and a
+// A merge told while the town is open is laid on its subject's building (src/page/sites/sites.ts): a crane and a
 // truck come first, then the roof goes up with the storey, and the town that followed shows the roof where a town
 // opened after the merge has it. With motion reduced, the roof is up at once. Before, the town read its subjects'
 // merges when it opened, and a merge showed at its next opening. What each step draws, piece by piece, is
-// src/sites.test.ts's.
+// src/page/sites/sites.test.ts's.
 
 import assert from "node:assert/strict";
 import { after, before, test } from "node:test";
@@ -95,7 +95,7 @@ async function townOf(merges: number) {
 			patched: [...handles].map((handle) => [handle, { keys: [["topicMerges", { set: next }]] }]),
 		});
 	};
-	// What the fleet said while the town came is there at once at its next telling (src/toggle.ts):
+	// What the fleet said while the town came is there at once at its next telling (src/page/sonar/toggle.ts):
 	// told once here, as it is, so that the test's own telling is played.
 	tell(merges);
 	await pass(page, 1);
@@ -125,7 +125,7 @@ test("computer: a merge told under the open town is laid on its building as in a
 	const said = JSON.stringify({ before: town.roof, laid, anew: anew.roof });
 	assert.ok(Math.abs(laid.x - anew.roof.x) < 1.5 && Math.abs(laid.y - anew.roof.y) < 1.5, `the roof stands where a town opened on that merge has it (${said})`);
 	// With motion reduced, the next merge begins a storey at once: the town tells a change within two seconds
-	// (src/live.ts), and no crane nor truck comes first.
+	// (src/page/people/live.ts), and no crane nor truck comes first.
 	await town.page.emulateMedia({ colorScheme: "light", reducedMotion: "reduce" });
 	town.tell(2);
 	const next = await risen(town.page, laid, 3);

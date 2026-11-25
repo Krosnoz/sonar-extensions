@@ -7,8 +7,8 @@ import { afterAll, beforeEach, expect, test } from "bun:test";
 import { existsSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { dayOf } from "../src/calendar";
-import { JEV_PER_MTOK } from "../src/cost";
+import { dayOf } from "../src/shared/calendar";
+import { JEV_PER_MTOK } from "../src/shared/cost";
 import { answering, fakeTypeSafe, neutral, outOfCredits } from "./fake-typesafe";
 import { noon, started } from "./support";
 

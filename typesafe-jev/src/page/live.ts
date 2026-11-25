@@ -1,4 +1,4 @@
-// What the server says live when Jev switches itself off (../server.ts, ../judge.ts): `{ kind: "cap", usd }` at its
+// What the server says live when Jev switches itself off (../server.ts, ../server/judge.ts): `{ kind: "cap", usd }` at its
 // monthly cap, `{ kind: "credits" }` when TypeSafe has none left. Said as Sonar's plugin says it; anything else, nothing.
 
 import type { Json } from "@sonar/extension";

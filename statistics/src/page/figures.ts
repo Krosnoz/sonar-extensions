@@ -1,8 +1,8 @@
-// The figures of the statistics, from the weeks (../shapes.ts): the weeks compared (the last full one, the last 4, or
+// The figures of the statistics, from the weeks (../shared/shapes.ts): the weeks compared (the last full one, the last 4, or
 // those since Sonar, against as many before), a figure's value over them, and whether it went the good way. The current
 // week is never compared: it is not over.
 
-import type { StatsWeek } from "../shapes";
+import type { StatsWeek } from "../shared/shapes";
 
 export type Week = StatsWeek;
 export type Mode = "week" | "four" | "sonar";

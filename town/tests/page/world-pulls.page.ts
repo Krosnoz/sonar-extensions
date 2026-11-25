@@ -1,12 +1,12 @@
-// A subject's open pull requests show in the town: scaffolding on its building (src/scaffolds.ts) and a
-// bar each on its sign, filled as its checks end (src/sign-nodes.ts). A check that fails turns both red;
+// A subject's open pull requests show in the town: scaffolding on its building (src/page/sites/scaffolds.ts) and a
+// bar each on its sign, filled as its checks end (src/page/signs/sign-nodes.ts). A check that fails turns both red;
 // the pull request merged, both go; one that opens under the open town brings them. Before, the town said nothing of a
-// subject's pull requests. What each change draws, piece by piece, is src/scaffolds.test.ts's.
+// subject's pull requests. What each change draws, piece by piece, is src/page/sites/scaffolds.test.ts's.
 
 import assert from "node:assert/strict";
 import { after, before, test } from "node:test";
 import type { Browser, Page } from "playwright-core";
-import { french as texts } from "../../src/i18n-fr.ts";
+import { french as texts } from "../../src/page/sonar/i18n-fr.ts";
 import { type Bench, DESKTOP, startBenchAndBrowser } from "../sonar/tests/page/support/bench.ts";
 import { drawnOver } from "../sonar/tests/page/support/phone-finish-audit.ts";
 import { told } from "../sonar/tests/page/support/told.ts";

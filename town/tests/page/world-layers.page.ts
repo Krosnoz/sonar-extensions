@@ -1,4 +1,4 @@
-// An agent's figure goes and is born in layers (src/layers.ts) when the page says so, by the event
+// An agent's figure goes and is born in layers (src/page/people/layers.ts) when the page says so, by the event
 // "town-life" on the town. Its name goes with it and comes back with it; where it stood, the town's drawing shows the
 // ground, then the figure again.
 

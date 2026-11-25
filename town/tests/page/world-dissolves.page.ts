@@ -1,4 +1,4 @@
-// The page leaves along one edge as the town comes (src/edge.ts, cover.ts), from left to right, and a
+// The page leaves along one edge as the town comes (src/page/arrival/edge.ts, cover.ts), from left to right, and a
 // card leaves with the ground round it, at the same instant: a card kept whole while the page round it left, or that
 // left a moment after it, read as a card that does not dissolve (18/11). Nothing of the page is copied, moved, masked or
 // cut: a cover hides it behind the edge. A mask image on its things, or a shape cut in the map, made the browser draw
@@ -86,7 +86,7 @@ const state = (page: Page): Promise<string | undefined> => page.evaluate(() => d
 
 // The town's time is the test's. While the page is half gone, a fifth of a second for each drawing: on its own time,
 // the test browser stopped for seconds to read the town's picture back; the town then counted a drawing for its whole
-// time (src/morph.ts), and the page left between two drawings. Else a second for each drawing: the test
+// time (src/page/arrival/morph.ts), and the page left between two drawings. Else a second for each drawing: the test
 // browser takes seconds to draw the town, whatever it shows.
 async function draw(page: Page, done: () => Promise<boolean>): Promise<void> {
 	const limit = Date.now() + 240_000;

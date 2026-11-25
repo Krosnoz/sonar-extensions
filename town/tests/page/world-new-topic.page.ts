@@ -1,8 +1,8 @@
 // A session of a subject the town has no building for, told while the town is open, builds its building on the block
-// the town holds for it (src/plot.ts): its sign joins the page once the building is built, then its
+// the town holds for it (src/page/sites/plot.ts): its sign joins the page once the building is built, then its
 // inhabitant is born. With motion reduced, the building is there at once. A session not filed yet takes no block: the
 // subject it is then filed under does. A second new subject waits for the town's next opening. Before, a new subject showed at the town's next opening only. What each step draws, piece by piece,
-// is src/plot.test.ts's.
+// is src/page/sites/plot.test.ts's.
 
 import assert from "node:assert/strict";
 import { after, before, test } from "node:test";
@@ -24,7 +24,7 @@ after(async () => {
 	await bench?.close();
 });
 
-// The subjects whose sign is in the page, and how many agents the town shows (src/sign-again.ts).
+// The subjects whose sign is in the page, and how many agents the town shows (src/page/signs/sign-again.ts).
 type Shown = { signs: string[]; agents: number };
 const shownOf = (page: Page): Promise<Shown> =>
 	page.evaluate(() => ({
@@ -75,7 +75,7 @@ async function townOf() {
 		});
 		return handle;
 	};
-	// What the fleet said while the town came is there at once at its next telling (src/toggle.ts):
+	// What the fleet said while the town came is there at once at its next telling (src/page/sonar/toggle.ts):
 	// told once here, as it is, so that the test's own telling is played.
 	say({ type: "fleet-changes", changed: [], removed: [], order: null });
 	await pass(page, 1);

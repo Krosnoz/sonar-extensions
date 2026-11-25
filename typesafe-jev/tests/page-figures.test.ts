@@ -3,7 +3,7 @@
 // (its usage/jev.ts): no chart for today alone, nor when every day rounds to nothing.
 
 import { expect, test } from "bun:test";
-import type { UsageReport } from "../src/cost";
+import type { UsageReport } from "../src/shared/cost";
 import { figuresOf } from "../src/page/figures";
 import { kitOf } from "../src/page/kit";
 

@@ -3,7 +3,7 @@
 // tests/judgments.test.ts on its plugin.
 
 import { afterAll, beforeEach, expect, test } from "bun:test";
-import { jevTexts } from "../src/i18n-questions";
+import { jevTexts } from "../src/server/i18n-questions";
 import { answering, fakeTypeSafe, neutral } from "./fake-typesafe";
 import { started } from "./support";
 

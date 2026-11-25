@@ -1,14 +1,14 @@
 // The server entry: Sonar calls start(api) when it starts, with the extension switched on. It keeps each project's
-// town style (./style-store.ts) and serves it under /api/ext/town:
+// town style (./server/style-store.ts) and serves it under /api/ext/town:
 // - GET /style?project=<name>: { style, drawn }, as kept. A reading never draws.
 // - POST /style { project, style }: `style` one of the six, the user's choice; or "automatic", the draw: the style
 //   drawn for the project before, else the one the fewest other projects' towns show, kept. Answers { style, drawn }.
-// At each start, it first takes the styles Sonar's settings kept before the town left it (./style-left.ts).
+// At each start, it first takes the styles Sonar's settings kept before the town left it (./server/style-left.ts).
 
 import type { Json, RouteRequest, ServerApi } from "@sonar/extension";
-import { takeLeft } from "./style-left";
-import { type Kept, keyOf, readKept, writeKept } from "./style-store";
-import { isStyle, leastTaken, NONE, shownOf, type World } from "./world";
+import { takeLeft } from "./server/style-left";
+import { type Kept, keyOf, readKept, writeKept } from "./server/style-store";
+import { isStyle, leastTaken, NONE, shownOf, type World } from "./shared/world";
 
 const refused = (message: string, status: number) => Object.assign(new Error(message), { status });
 const messageOf = (error: unknown) => (error instanceof Error ? error.message : String(error));

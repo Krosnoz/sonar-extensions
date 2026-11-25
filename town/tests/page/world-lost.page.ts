@@ -1,4 +1,4 @@
-// The town never stays a blank screen (src/drawer.ts): when the browser takes the graphics card back
+// The town never stays a blank screen (src/page/render/drawer.ts): when the browser takes the graphics card back
 // (its context lost, short of memory), the drawing starts again on the same canvas, one tier lower, as soon as the
 // context comes back; when it does not come back, the page comes back and says the town cannot be drawn. Played with
 // the browser's own WEBGL_lose_context.
@@ -6,7 +6,7 @@
 import assert from "node:assert/strict";
 import { after, before, test } from "node:test";
 import type { Browser, Page } from "playwright-core";
-import { french as worldTexts } from "../../src/i18n-fr.ts";
+import { french as worldTexts } from "../../src/page/sonar/i18n-fr.ts";
 import { type Bench, openPage, PHONE, settle, startBenchAndBrowser } from "../sonar/tests/page/support/bench.ts";
 import { inTownMode } from "./support/town.ts";
 import { lightTown } from "./support/town-draw.ts";

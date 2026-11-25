@@ -4,7 +4,7 @@
 
 import { expect, test } from "bun:test";
 import type { Velocity, VelocityWeek } from "@sonar/extension";
-import { statsWeeks } from "../src/weeks";
+import { statsWeeks } from "../src/server/weeks";
 import { at, bodyOf, startOf, started, usageLine, weekStarting } from "./support";
 
 const STARTS = ["2026-09-21", "2026-09-28", "2026-10-05", "2026-10-12"];

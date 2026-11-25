@@ -1,6 +1,6 @@
-// The test browser draws on its processor, where the town is not offered (src/offered.ts): a page test
+// The test browser draws on its processor, where the town is not offered (src/page/sonar/offered.ts): a page test
 // asks by hand for a drawing a processor holds, a pixel for 2 to 4 of the screen's on each side and no pass
-// (`sonar:town-draw`, src/drawer.ts).
+// (`sonar:town-draw`, src/page/render/drawer.ts).
 
 import type { Page } from "playwright-core";
 

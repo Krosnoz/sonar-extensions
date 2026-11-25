@@ -5,7 +5,7 @@
 
 import { afterEach, beforeEach, expect, test } from "bun:test";
 import type { Json, PageApi, PartSlot } from "@sonar/extension";
-import type { UsageReport } from "../src/cost";
+import type { UsageReport } from "../src/shared/cost";
 import { kitOf } from "../src/page/kit";
 import { servicesPart } from "../src/page/services";
 import { settingsHub } from "../src/page/settings";

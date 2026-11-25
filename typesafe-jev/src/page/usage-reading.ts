@@ -8,7 +8,7 @@
 // page is hidden, and reads at once when it shows again; a step reads nothing while the group is folded.
 
 import type { PageApi } from "@sonar/extension";
-import type { UsageReport } from "../cost";
+import type { UsageReport } from "../shared/cost";
 import type { Kit } from "./kit";
 import { stopText } from "./live";
 import { newest } from "./newest";

@@ -1,7 +1,7 @@
-// An inhabitant at work holds what its agent's last tool does (src/tools.ts): a book while it reads, a
+// An inhabitant at work holds what its agent's last tool does (src/page/people/tools.ts): a book while it reads, a
 // hammer while it writes, a console while it runs a command, its crate with any other tool. The tool is the one the
 // server says of its session, and what it does is what the agent's catalog says. Before, every inhabitant at work
-// carried a crate. What each change draws, size by size, is src/live.test.ts's.
+// carried a crate. What each change draws, size by size, is src/page/people/live.test.ts's.
 
 import assert from "node:assert/strict";
 import { after, before, test } from "node:test";
@@ -23,7 +23,7 @@ after(async () => {
 });
 
 // How many agents the town shows, and how many of those at work hold a crate, a book, a hammer and a console
-// (src/sign-again.ts).
+// (src/page/signs/sign-again.ts).
 type Shown = { agents: number; held: number[] };
 const shownOf = (page: Page): Promise<Shown> =>
 	page.evaluate(() => {
@@ -73,7 +73,7 @@ test("computer: one at work holds what its agent's last tool does, and takes the
 			changed.push({ ...model, handle, id: handle, name: `At work ${handle}`, busy: true, tool, prs: [], children: [], decision: null });
 		say({ type: "fleet-changes", changed, removed: gone, order });
 	};
-	// What the fleet said while the town came is there at once at its next telling (src/toggle.ts):
+	// What the fleet said while the town came is there at once at its next telling (src/page/sonar/toggle.ts):
 	// told once here, as it is, so that the test's own telling is played.
 	say({ type: "fleet-changes", changed: [], removed: [], order: null });
 	await pass(page, 1);
@@ -85,7 +85,7 @@ test("computer: one at work holds what its agent's last tool does, and takes the
 	const writes = await until(page, first.agents + 1);
 	assert.deepEqual([writes.agents - first.agents, more(writes)], [1, [0, 0, 1, 0]], `one that writes holds a hammer (${JSON.stringify([first, writes])})`);
 
-	// Its birth ends: a figure takes no other step meanwhile (src/live-steps.ts).
+	// Its birth ends: a figure takes no other step meanwhile (src/page/people/live-steps.ts).
 	await pass(page, 4);
 	// It runs a command now. The town says its people again when one comes: another session opens, searching the web.
 	tell({ "s-tool-0": "Bash", "s-tool-1": "WebSearch" });

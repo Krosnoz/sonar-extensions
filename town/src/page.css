@@ -10,19 +10,19 @@
 #town.away { visibility: hidden; }
 body.town #town:not(.away) { pointer-events: auto; }
 /* The town covers the Map (PageMap's `cover`): the Map's tools hide, the extensions' tools stay. The town's icon is one
-   of them (the place "tools", ./toggle.ts#wireTown): it stays under the cover. */
+   of them (the place "tools", ./page/sonar/toggle.ts#wireTown): it stays under the cover. */
 /* The drawing fades out over a short band at the bar's edge: of the paper's colour, the bar showed no edge, and a
    tilted steeple read as sliced by a line drawn across it (12/11). Short, so the roofs under it keep their colours. */
 #town { --fade-from: var(--top); }
 #town > canvas:not(.town-cover) { mask-image: linear-gradient(to bottom, transparent var(--fade-from), var(--black) calc(var(--fade-from) + var(--space-4))); }
-/* What hides the page behind its edge as the town comes (./cover.ts), a pixel for a case of the page: whole
+/* What hides the page behind its edge as the town comes (./page/arrival/cover.ts), a pixel for a case of the page: whole
    along the top bar, where the town fades. */
 .town-cover { position: fixed; pointer-events: none; image-rendering: pixelated; }
 
 .town-toggle svg { width: var(--glyph); height: var(--glyph); }
 .town-map.cornered { position: fixed; right: var(--gutter); bottom: var(--gutter); }
 /* Among the Map's tools, the icon slides down with them on `translate` (Sonar gives its extensions' tools that slide),
-   which adds to the `transform` it slides on to its own corner (./toggle.ts#corner): cornered, it keeps none. Each
+   which adds to the `transform` it slides on to its own corner (./page/sonar/toggle.ts#corner): cornered, it keeps none. Each
    keeps the fades and the press of Sonar's icon buttons, which a transition list of its own would replace. */
 .zoom .ext-part > .town-map:not(.cornered) { translate: 0 var(--down, 0); transition: translate var(--dur-move) var(--ease-in-out) var(--after, 0ms), background-color var(--dur-state), border-color var(--dur-state), transform var(--dur-press) var(--ease); }
 .zoom .ext-part > .town-map.cornered { translate: none; transition: background-color var(--dur-state), border-color var(--dur-state), transform var(--dur-press) var(--ease); }
@@ -54,13 +54,13 @@ body.town #town:not(.away) { pointer-events: auto; }
 .world-count[data-kind="done"] { background: var(--tone-done); color: var(--paper); }
 .world-layer:not([data-level="0"]) .world-sign:not(.world-mini) .world-count { box-shadow: none; }
 .world-layer:not([data-level="0"]) .world-sign:not(.world-short, .world-mini) .world-count { display: none; }
-/* A count of one shows only beside the name alone, while it has room (./sign-looks.ts): over the pictogram alone, it adds
+/* A count of one shows only beside the name alone, while it has room (./page/signs/sign-looks.ts): over the pictogram alone, it adds
    nothing. */
 .world-count[data-one] { display: none; }
 .world-layer:not([data-level="0"]) .world-short:not(.world-bare) .world-count[data-one] { display: inline; }
 .world-sign svg { display: block; flex: none; }
 .world-off { visibility: hidden; }
-/* A sign or a name that hides fades out where it stood, then leaves (its fade in: ./signs.ts). */
+/* A sign or a name that hides fades out where it stood, then leaves (its fade in: ./page/signs/signs.ts). */
 .world-sign, .world-name { transition: opacity var(--dur-state-out) var(--ease), background-color var(--dur-state) var(--ease), visibility 0s; }
 .world-sign.world-off, .world-name.world-off { opacity: 0; transition: opacity var(--dur-state-out) var(--ease), visibility 0s var(--dur-state-out); }
 /* A name no one has seen yet takes no place in the page: the 10 000 names of a big town, hidden but laid out, froze it 2 s. */
@@ -86,14 +86,14 @@ body.town #town:not(.away) { pointer-events: auto; }
 .world-layer:not([data-level="0"]) .world-sign:not(.world-mini) .world-label { padding: 0; background: none; box-shadow: none; }
 /* A sign short of room (a phone, a crowd): its name alone; its pictogram and count say the count. */
 .world-short .world-label > :not(strong) { display: none; }
-/* Its name cut, only when whole it finds no room (./signs.ts#LOOKS). */
+/* Its name cut, only when whole it finds no room (./page/signs/signs.ts#LOOKS). */
 .world-cut .world-label strong { max-width: 15em; overflow: hidden; text-overflow: ellipsis; }
 .world-short.world-cut .world-label strong { max-width: 10em; }
 /* At work: a pill of its state's hue, as the other counts, light enough for the ink to read at 4.5:1 in both themes. */
 .world-label span { padding: 0 var(--space-1); border-radius: var(--radius-pill); background: color-mix(in oklab, var(--tone-work) 16%, var(--surface)); color: var(--ink); font-weight: 600; }
 .world-label b { background: var(--tone-wait); color: var(--on-wait); border-radius: var(--radius-pill); padding: 0 var(--space-1); font-weight: 600; }
 .world-label em { font-style: normal; background: var(--tone-done); color: var(--paper); border-radius: var(--radius-pill); padding: 0 var(--space-1); font-weight: 600; }
-/* A subject's open pull requests (./sign-nodes.ts): a bar each, filled as its checks end, in the tone the map
+/* A subject's open pull requests (./page/signs/sign-nodes.ts): a bar each, filled as its checks end, in the tone the map
    gives its mark (.tone-*, components.css). Where the sign is its pictogram alone, the gauge is a pill of its own. */
 .world-pulls { display: inline-flex; align-items: center; gap: 3px; flex: none; }
 .world-pulls i { position: relative; width: 22px; height: 6px; border-radius: var(--radius-pill); background: color-mix(in oklab, var(--c) 24%, var(--surface)); overflow: hidden; }
@@ -112,7 +112,7 @@ body.town #town:not(.away) { pointer-events: auto; }
 .world-name.world-cut > span { max-width: 11em; overflow: hidden; text-overflow: ellipsis; }
 /* Its card says its name: the name over its head would lie under the card. */
 .world-name.world-carded { opacity: 0; }
-/* An inhabitant's card (./notebook.ts), over its head; `.under`, under its feet. Its tail points at the
+/* An inhabitant's card (./page/people/notebook.ts), over its head; `.under`, under its feet. Its tail points at the
    inhabitant (--tail, from the card's left). It comes out of its inhabitant (the origin of its scale is its tail) in the
    time of a menu, and goes faster. One width: from an inhabitant to another, and from the card to the notebook, only its
    height changes. */

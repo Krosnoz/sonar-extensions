@@ -1,8 +1,8 @@
 // A subject's building takes its height from its merges, which the server says on each of its sessions (the contract's
-// topicMerges, Sonar's apps/server/src/fleet/merged.ts): a storey more each time they double (src/merge-floors.ts).
+// topicMerges, Sonar's apps/server/src/fleet/merged.ts): a storey more each time they double (src/page/sites/merge-floors.ts).
 // Before, its height followed how many agents the subject had now. The same fleet is opened with 0, 1 then 3 merges:
 // its roof rises by one then two storeys; with 2, the roof already stands over the storey to come. The rule itself,
-// merge by merge, is src/merge-floors.test.ts's.
+// merge by merge, is src/page/sites/merge-floors.test.ts's.
 
 import assert from "node:assert/strict";
 import { after, before, test } from "node:test";
@@ -104,7 +104,7 @@ async function townOf(merges: number, { framed, late = 0 }: { framed?: { x: numb
 	await page.goto(`${bench.base}/?projet=alpha`);
 	await page.locator("#viewport .agent-card[data-handle]").first().waitFor({ timeout: 30_000 });
 	// The map holds still before the town opens: the camera starts from the size its subject's zone has on the page
-	// (src/framing.ts), and a zone still growing opened the town 59 px aside.
+	// (src/page/camera/framing.ts), and a zone still growing opened the town 59 px aside.
 	await animationsEnded(page);
 	await page.waitForFunction(
 		() => {
@@ -165,7 +165,7 @@ test("computer: a subject's building rises a storey each time its merges double"
 		Math.abs(between.y - three.y) < 1.5 && Math.abs(between.x - three.x) < 1.5,
 		`2 merges lift the roof over the storey to come (${JSON.stringify(between)}, ${said})`,
 	);
-	// What is left to lay of that storey is under a site's net (src/site-net.ts): where the building
+	// What is left to lay of that storey is under a site's net (src/page/sites/site-net.ts): where the building
 	// with 2 merges differs from the one with 3, it shows the net. Before, the storey was laid in small scattered cubes,
 	// with holes and lines in the user's accent between them: from afar it read as a broken display.
 	// The picture starts 20 px over the sign's dot, which stands a storey and a quarter over the roof's foot: the storey

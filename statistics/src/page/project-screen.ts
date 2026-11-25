@@ -4,7 +4,7 @@
 // read again.
 
 import type { PartSlot } from "@sonar/extension";
-import type { ProjectStats, StatsTask } from "../shapes";
+import type { ProjectStats, StatsTask } from "../shared/shapes";
 import { compared } from "./figures";
 import { reasonOf } from "./global-screen";
 import { kit } from "./kit";

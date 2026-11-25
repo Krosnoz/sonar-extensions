@@ -2,7 +2,7 @@
 // the user wrote to it. While Sonar does not measure the user's activity, a strip has no such moment (`touches` null):
 // the legend says they are not measured.
 
-import type { StatsTask } from "../shapes";
+import type { StatsTask } from "../shared/shapes";
 import { kit } from "./kit";
 import { emptyCard } from "./look";
 

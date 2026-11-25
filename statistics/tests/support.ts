@@ -3,7 +3,7 @@
 import { readFileSync } from "node:fs";
 import type { UsageLine } from "@sonar/extension";
 import { type Bench, fakeServer } from "@sonar/extension/testing";
-import { dayOf } from "../src/calendar";
+import { dayOf } from "../src/server/calendar";
 import { start } from "../src/server";
 
 export const card = JSON.parse(readFileSync(new URL("../extension.json", import.meta.url), "utf8"));

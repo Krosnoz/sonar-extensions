@@ -4,7 +4,7 @@ import type { Mode } from "./figures";
 import { kit } from "./kit";
 
 const KEY = "mode";
-// Where Sonar's own statistics kept the choice: taken once (./page.ts), so that the user keeps it.
+// Where Sonar's own statistics kept the choice: taken once (../page.ts), so that the user keeps it.
 const SONAR_KEY = "sonar:stats-mode";
 
 const isMode = (value: string | null): value is Mode => value === "week" || value === "four" || value === "sonar";

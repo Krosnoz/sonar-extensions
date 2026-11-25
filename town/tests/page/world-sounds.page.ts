@@ -1,8 +1,8 @@
-// The open town plays a short sound for each event it plays where the screen shows it (src/town-sound.ts):
+// The open town plays a short sound for each event it plays where the screen shows it (src/page/sound/town-sound.ts):
 // here, the tests of a pull request that fail, its scaffolding turning red. The sound files the page asks for are
 // counted: a sound is asked for its file when it plays. What stood as the town opened is not heard; the same event is
 // not heard once its line or all the sounds are cut. Which note each event plays, and every rule of the ear, is
-// src/town-sound.test.ts's.
+// src/page/sound/town-sound.test.ts's.
 
 import assert from "node:assert/strict";
 import { after, before, test } from "node:test";

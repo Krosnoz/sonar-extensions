@@ -1,14 +1,14 @@
-// The open town follows its agents (src/live.ts): a session that takes a turn, asks, opens or closes
+// The open town follows its agents (src/page/people/live.ts): a session that takes a turn, asks, opens or closes
 // shows there as it happens, in its inhabitant's name, in its subject's sign and in how many agents the town shows.
 // What changes while the town is out of sight is there when it shows again, and on the map once the page is back.
 // Before, the town was a picture of the map taken at its opening: a session opened under it showed at the next one.
-// What each change draws (who goes, who is born, who glides) is src/live.test.ts's.
+// What each change draws (who goes, who is born, who glides) is src/page/people/live.test.ts's.
 
 import assert from "node:assert/strict";
 import { readFileSync, writeFileSync } from "node:fs";
 import { after, before, test } from "node:test";
 import type { Browser, Page } from "playwright-core";
-import { french as texts } from "../../src/i18n-fr.ts";
+import { french as texts } from "../../src/page/sonar/i18n-fr.ts";
 import { type Bench, DESKTOP, openPage, settle, startBenchAndBrowser } from "../sonar/tests/page/support/bench.ts";
 import { inTownMode } from "./support/town.ts";
 import { lightTown } from "./support/town-draw.ts";
@@ -46,7 +46,7 @@ const shows = (page: Page, holds: (town: Town) => boolean): Promise<Town> => set
 
 test("computer: the open town shows a session that takes a turn, asks, opens and closes, as it happens", async () => {
 	const { page, errors } = await openPage(browser, DESKTOP);
-	// The town is opened once, with time: an opening longer than a minute is given up (src/toggle.ts,
+	// The town is opened once, with time: an opening longer than a minute is given up (src/page/sonar/toggle.ts,
 	// OPENING_LIMIT), and the test browser draws on a processor the other tests share. This file is not about that limit.
 	await page.addInitScript(() => {
 		localStorage.setItem("sonar:view", "map");

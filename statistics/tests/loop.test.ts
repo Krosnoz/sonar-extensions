@@ -4,7 +4,7 @@
 
 import { expect, test } from "bun:test";
 import type { UsageLine } from "@sonar/extension";
-import { DAY_MS, dayOf } from "../src/calendar";
+import { DAY_MS, dayOf } from "../src/server/calendar";
 import { bodyOf, started, usageLine } from "./support";
 
 // As on real data (08/11/2026): 16 000 sessions over 60 days, in 600 projects.

@@ -71,7 +71,7 @@ export async function held(page: Page): Promise<void> {
 }
 
 // How many times the town has drawn since this was first asked: each drawing writes its level on its layer
-// (src/view-frames.ts#loop). -1 without a town.
+// (src/page/camera/view-frames.ts#loop). -1 without a town.
 function drawings(page: Page): Promise<number> {
 	return page.evaluate(() => {
 		const layer = document.querySelector("#town .world-layer");
@@ -89,7 +89,7 @@ function drawings(page: Page): Promise<number> {
 }
 
 // The town's clock goes on by half seconds, one drawing each: a site's own step is no longer
-// (src/sites.ts), and a drawing costs the test's browser more than a second.
+// (src/page/sites/sites.ts), and a drawing costs the test's browser more than a second.
 export async function pass(page: Page, seconds: number): Promise<void> {
 	// oxlint-disable-next-line no-await-in-loop
 	for (let half = 0; half < Math.round(seconds * 2); half++) await page.clock.fastForward(500);

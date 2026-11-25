@@ -2,7 +2,7 @@
 // choice, then the tile of what it cost, the chart by day when a day shows a cost, and the price.
 
 import type { PageUi } from "@sonar/extension";
-import type { UsageReport } from "../cost";
+import type { UsageReport } from "../shared/cost";
 import { chartOf } from "./chart";
 import { figuresOf } from "./figures";
 import type { Kit } from "./kit";

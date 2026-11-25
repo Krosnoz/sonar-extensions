@@ -1,13 +1,13 @@
 // The server entry: Sonar calls start(api) when it starts, with the extension switched on. It fills Sonar's judge with
-// Jev (./judge.ts), and answers the page under /api/ext/<id>: its settings (GET and POST /settings) and what it cost
+// Jev (./server/judge.ts), and answers the page under /api/ext/<id>: its settings (GET and POST /settings) and what it cost
 // (GET /usage?days=N). It imports nothing of Sonar when it runs: the contract gives types only.
 
 import type { ServerApi } from "@sonar/extension";
-import { usageReport } from "./cost";
-import { type JevOptions, jevJudge, TYPESAFE_KEY } from "./judge";
-import { changeSettings, type JevSettings, readSettings } from "./settings";
-import { TYPESAFE_URL } from "./typesafe";
-import { usageIn } from "./usage";
+import { usageReport } from "./shared/cost";
+import { type JevOptions, jevJudge, TYPESAFE_KEY } from "./server/judge";
+import { changeSettings, type JevSettings, readSettings } from "./server/settings";
+import { TYPESAFE_URL } from "./server/typesafe";
+import { usageIn } from "./shared/usage";
 
 const DAYS_MOST = 366;
 

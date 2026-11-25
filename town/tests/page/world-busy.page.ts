@@ -1,11 +1,11 @@
-// The town's icon while the town comes or leaves, and an opening too slow for the machine (src/toggle.ts).
+// The town's icon while the town comes or leaves, and an opening too slow for the machine (src/page/sonar/toggle.ts).
 // A click on the icon during the way back was dropped without a sign; a processor 20 times slower left the map pale,
 // the icon in its corner, for more than 4 minutes, without the town nor a word (14/11).
 
 import assert from "node:assert/strict";
 import { after, before, test } from "node:test";
 import type { Browser, Page } from "playwright-core";
-import { french as worldTexts } from "../../src/i18n-fr.ts";
+import { french as worldTexts } from "../../src/page/sonar/i18n-fr.ts";
 import { type Bench, DESKTOP, openPage, PHONE, settle, startBenchAndBrowser } from "../sonar/tests/page/support/bench.ts";
 import { inTownMode } from "./support/town.ts";
 import { lightTown } from "./support/town-draw.ts";
@@ -30,7 +30,7 @@ async function open(limit?: number): Promise<{ page: Page; errors: string[] }> {
 	if (limit !== undefined)
 		await opened.page.addInitScript((limit) => {
 			localStorage.setItem("sonar:town-limit", String(limit));
-			// A drawing asked for is offered whatever the machine (src/offered.ts): once the machine is
+			// A drawing asked for is offered whatever the machine (src/page/sonar/offered.ts): once the machine is
 			// known not to hold the town, the page is left to read it.
 			if (localStorage.getItem("sonar:town-unheld")) localStorage.removeItem("sonar:town-draw");
 		}, limit);
@@ -38,7 +38,7 @@ async function open(limit?: number): Promise<{ page: Page; errors: string[] }> {
 	await opened.page.locator("#viewport .agent-card").first().waitFor({ timeout: 30_000 });
 	return opened;
 }
-// What the dissolve left: the page's cover (src/cover.ts), a mask on a thing of the map.
+// What the dissolve left: the page's cover (src/page/arrival/cover.ts), a mask on a thing of the map.
 const masked = (page: Page): Promise<number> =>
 	page.evaluate(
 		() =>

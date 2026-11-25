@@ -1,7 +1,7 @@
 // Every project on a line, in the statistics of every project: its part of the user's time, its PRs, its cost, the
 // user's time on it and its trust. A line opens the project's own statistics, a screen Sonar keeps.
 
-import type { GlobalStats } from "../shapes";
+import type { GlobalStats } from "../shared/shapes";
 import { valueOf, type Week } from "./figures";
 import { kit } from "./kit";
 import { CHEVRON, emptyCard, fold } from "./look";

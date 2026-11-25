@@ -4,7 +4,7 @@
 
 import { expect, test } from "bun:test";
 import type { TaskLine } from "@sonar/extension";
-import { DAY_MS } from "../src/calendar";
+import { DAY_MS } from "../src/server/calendar";
 import { at, bodyOf, startOf, started, weekStarting } from "./support";
 
 const task = (state: TaskLine["state"], endedAt: number | null): TaskLine => ({

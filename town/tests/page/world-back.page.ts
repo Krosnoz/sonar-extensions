@@ -1,4 +1,4 @@
-// The town while it comes and while it goes back to the map (src/toggle.ts). It takes no gesture then:
+// The town while it comes and while it goes back to the map (src/page/sonar/toggle.ts). It takes no gesture then:
 // a drag turned it under the cubes still flying. And the map draws no card again while the town covers it: a card drawn
 // again under the town, or a new session's, carried no mask, and showed whole as soon as the way back started, long
 // before its bricks flew back (15/11).
@@ -26,7 +26,7 @@ const post = async (url: string, body: unknown): Promise<Record<string, unknown>
 	(await (await fetch(url, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) })).json()) as Record<string, unknown>;
 
 // A frame of the page: the town there, arrived (its signs show), turned (its compass shows); the map shown under it, and
-// what the page shows of itself behind its edge (`page`, src/cover.ts): "whole", "broken" once the edge
+// what the page shows of itself behind its edge (`page`, src/page/arrival/cover.ts): "whole", "broken" once the edge
 // has taken a part of it, "gone" once it has taken it all, nothing without the cover.
 type Frame = { town: boolean; arrived: boolean; turned: boolean; shown: boolean; page: string };
 

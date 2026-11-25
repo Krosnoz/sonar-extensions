@@ -1,6 +1,6 @@
 // From four agents that wait for the user on a subject's place, their bubbles are one large bubble that says how many
-// (src/heaps.ts); under four, each one keeps its own. Before, twelve bubbles stood in a heap, each over
-// the faces of the row behind. What each change draws, bubble by bubble, is src/heaps.test.ts's.
+// (src/page/people/heaps.ts); under four, each one keeps its own. Before, twelve bubbles stood in a heap, each over
+// the faces of the row behind. What each change draws, bubble by bubble, is src/page/people/heaps.test.ts's.
 
 import assert from "node:assert/strict";
 import { after, before, test } from "node:test";
@@ -21,7 +21,7 @@ after(async () => {
 	await bench?.close();
 });
 
-// How many agents the town shows, and how many wait in each large bubble (src/sign-again.ts).
+// How many agents the town shows, and how many wait in each large bubble (src/page/signs/sign-again.ts).
 type Shown = { agents: number; heaps: number[] };
 const shownOf = (page: Page): Promise<Shown> =>
 	page.evaluate(() => {
@@ -76,7 +76,7 @@ test("computer: the bubbles of four agents that wait on a subject become one lar
 		order.splice(order.indexOf(handle), 1);
 		say({ type: "fleet-changes", changed: [], removed: [handle], order });
 	};
-	// What the fleet said while the town came is there at once at its next telling (src/toggle.ts):
+	// What the fleet said while the town came is there at once at its next telling (src/page/sonar/toggle.ts):
 	// told once here, as it is, so that the test's own telling is played.
 	say({ type: "fleet-changes", changed: [], removed: [], order: null });
 	await pass(page, 1);
@@ -92,7 +92,7 @@ test("computer: the bubbles of four agents that wait on a subject become one lar
 		const shown = await until(page, first.agents + more);
 		assert.equal(shown.agents, first.agents + more, `the session ${more} has its inhabitant (${JSON.stringify(shown)})`);
 		seen.push(shown.heaps);
-		// Its birth ends: a figure takes no other step meanwhile (src/live-steps.ts).
+		// Its birth ends: a figure takes no other step meanwhile (src/page/people/live-steps.ts).
 		// oxlint-disable-next-line no-await-in-loop
 		await pass(page, 4);
 	}
