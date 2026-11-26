@@ -71,10 +71,10 @@ export type Ticket = {
 };
 export type TicketState = { readonly id: string; readonly name: string; readonly type: string; readonly color: string };
 
-// A ticket tracker (Linear, Jira…), as an extension gives it. The core keeps the rest: the cache, the links between
+// A ticket tracker (Jira, Trello…), as an extension gives it. The core keeps the rest: the cache, the links between
 // sessions and tickets, the search of a ticket in a session's texts, the agents that write a ticket.
 export type TicketsProvider = {
-	// The tracker's name, as the page says it ("Linear"): 1 to 40 characters.
+	// The tracker's name, as the page says it ("Jira"): 1 to 40 characters.
 	readonly name: string;
 	// Whether the project can reach the tracker (a key saved): false, nothing is asked.
 	readonly ready: (project: string) => boolean | Promise<boolean>;

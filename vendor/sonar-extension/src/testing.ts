@@ -14,8 +14,10 @@ import type { AgentTool, Json, ProjectLine, RouteHandler, RouteRequest, ServerAp
 import { readManifest } from "./manifest";
 import type { ClosedSession } from "./measures";
 import { checkedJudge, CORE_LENT_NAMES, judgeRefusal, keptJudge } from "./judge-answers";
+import type { KeyTrialRun } from "./key-trial";
 import type { JudgeProvider, Port, TicketsProvider } from "./ports";
 import { checkedTickets, keptTickets, ticketsRefusal } from "./ticket-answers";
+import { keysOf } from "./testing-keys";
 import { type Measures, measuresOf, notDeclared } from "./testing-measures";
 import { eventRefusal, isToolFullName, isToolName, LIVE_MOST, provideRefusal, routeStatus, SERVER_EVENTS, TOOL_FULL_NAME_MOST, wrongToolField } from "./rules";
 
@@ -33,6 +35,9 @@ export type Bench = {
 	readonly log: readonly string[];
 	// A key the user gave: for a project when its card keeps it per project.
 	readonly setKey: (name: string, value: string, project?: string) => void;
+	// The trial it gave for a key (`keys.trial`), as Sonar would call it: the value trimmed, an answer Sonar refuses
+	// failing the call (./key-trial.ts); null while it gave none.
+	readonly keyTrial: (name: string) => KeyTrialRun | null;
 	// The open sessions and the projects it lists, as the test fills them.
 	readonly sessions: SessionLine[];
 	readonly projects: ProjectLine[];
@@ -71,7 +76,6 @@ const messageOf = (error: unknown) => (error instanceof Error ? error.message : 
 // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- what JSON.stringify wrote, JSON.parse reads back as JSON
 const asJson = (value: Json | undefined): Json => (value === undefined ? null : (JSON.parse(JSON.stringify(value)) as Json));
 const bytesOf = (text: string) => new TextEncoder().encode(text).length;
-const keyOf = (name: string, project: string | undefined) => JSON.stringify([name, project ?? null]);
 
 const route = (table: Map<string, RouteHandler>) => (path: string, handle: RouteHandler) => {
 	if (!path.startsWith("/")) throw new Error(`The path "${path}" must start with "/".`);
@@ -86,18 +90,6 @@ async function answer(table: Map<string, RouteHandler>, request: RouteRequest): 
 	} catch (error) {
 		return { status: routeStatus(error), body: { error: messageOf(error) } };
 	}
-}
-
-// Its keys, read as Sonar reads them: only those its card declares, a project's with its project.
-function keysOf(manifest: Manifest) {
-	const given = new Map<string, string>();
-	const read = async (name: string, project?: string) => {
-		const key = manifest.keys?.find((each) => each.name === name);
-		if (!key) throw new Error(`The key "${name}" is not declared by the extension's card.`);
-		if (key.scope === "project" && !project) throw new Error(`The key "${name}" is kept per project: name the project.`);
-		return given.get(keyOf(name, key.scope === "project" ? project : undefined))?.trim() || null;
-	};
-	return { read, set: (name: string, value: string, project?: string) => void given.set(keyOf(name, project), value) };
 }
 
 // Its tools: a refusal throws, and goes to its log, as in Sonar.
@@ -259,7 +251,7 @@ export function fakeServer(options: BenchOptions): Bench {
 			},
 		},
 		settings: settingsOf(options.settings ?? null),
-		keys: { read: keys.read },
+		keys: keys.api,
 		tools: { add: tools.add },
 		sessions: { list: async () => [...sessions], closed },
 		projects: projectsOf(projects, left, trust),
@@ -273,7 +265,7 @@ export function fakeServer(options: BenchOptions): Bench {
 		post: (path, body) => answer(routes.post, { path, query: {}, body: body === undefined ? undefined : asJson(body) }),
 		live,
 		log,
-		setKey: keys.set,
+		...keys.bench,
 		sessions,
 		projects,
 		left,

@@ -10,6 +10,7 @@
 // agent's own id (its transcript's), which outlives the handle, and the one every read of what Sonar measures gives.
 // What Sonar measures has its types in ./measures.ts; the ports an extension fills, in ./ports.ts.
 
+import type { KeyTrialRun } from "./key-trial";
 import type { PageLook } from "./look";
 import type { PageMap } from "./map";
 import type { JudgeProvider, TicketsProvider } from "./ports";
@@ -112,7 +113,13 @@ export type ServerApi = {
 	// Its own settings, in Sonar's settings file under extensions.<id>: null while none is saved.
 	readonly settings: { readonly read: () => Promise<Json>; readonly write: (value: Json) => Promise<void> };
 	// A key its card declares; null while the user gave none. A key the card does not declare is refused.
-	readonly keys: { readonly read: (name: string, project?: string) => Promise<string | null> };
+	// `trial`: how Sonar tries a key the card declares (./key-trial.ts), as the user types it and before it saves it;
+	// Sonar asks it again for each key saved when Services shows it. Throws for a key the card does not declare, or
+	// without a function; a second one for a key takes its place. A Sonar older than it has none: `api.keys.trial?.(…)`.
+	readonly keys: {
+		readonly read: (name: string, project?: string) => Promise<string | null>;
+		readonly trial?: (name: string, run: KeyTrialRun) => void;
+	};
 	// Throws when the name is malformed, too long with its id, taken by another of its tools or by one of the core's, or when the core cannot
 	// read its input's schema.
 	readonly tools: { readonly add: (tool: AgentTool) => void };

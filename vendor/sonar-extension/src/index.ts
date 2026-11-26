@@ -47,6 +47,7 @@ export { type MapPull, type MapSession, type PageMap } from "./map";
 export { type PageSession, type SessionEvent } from "./session";
 export { type PageSounds, type SoundLine } from "./sounds";
 export { type CardTranslation, type Manifest, type ManifestKey } from "./card";
+export { accountOf, type KeyTrialRun } from "./key-trial";
 export { KEY_WHY_MOST, localized, SUMMARY_MOST } from "./card-texts";
 export { type ManifestReading, readManifest, type Refusal, RESERVED_IDS } from "./manifest";
 export { type JudgedSession, type JudgeProvider, type JudgeRoute, type Port, type Ticket, type TicketsProvider, type TicketState } from "./ports";
