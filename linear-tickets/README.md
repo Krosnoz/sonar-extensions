@@ -8,6 +8,7 @@ It goes through the extension contract alone: it imports nothing of Sonar, and h
 
 - A Linear personal API key for each project, the key `key`: create it in Linear (Settings › API › Personal API keys), then give it in Sonar's Settings › Services. A project without a key reaches no ticket, and nothing is asked to Linear for it.
 - It calls `api.linear.app`. It writes one thing in Linear: an issue's state, when Sonar asks it to.
+- Sonar tries a key before it saves it: the extension asks Linear for the workspace the key opens, whose name then titles the key's row in Services. A key Linear refuses is not saved. A Sonar older than this trial saves the key without trying it.
 
 ## What it asks Linear
 
@@ -43,7 +44,7 @@ Laid out as every extension of this repository ([its README](../README.md#how-it
 | --- | --- |
 | [`extension.json`](extension.json) | The card: what Sonar shows of the extension, and what it asks for. |
 | [`src/server.ts`](src/server.ts) | The server part: its entry. |
-| [`src/server/`](src/server/) | Linear as Sonar's ticket tracker. Start with [`provider.ts`](src/server/provider.ts); the request to Linear is in [`api.ts`](src/server/api.ts), the reading of its answers in [`decode.ts`](src/server/decode.ts), then one file by subject: [`tickets.ts`](src/server/tickets.ts), [`states.ts`](src/server/states.ts), [`workspace.ts`](src/server/workspace.ts). |
+| [`src/server/`](src/server/) | Linear as Sonar's ticket tracker, and the trial of its key. Start with [`provider.ts`](src/server/provider.ts); the request to Linear is in [`api.ts`](src/server/api.ts), the reading of its answers in [`decode.ts`](src/server/decode.ts), then one file by subject: [`tickets.ts`](src/server/tickets.ts), [`states.ts`](src/server/states.ts), [`workspace.ts`](src/server/workspace.ts). |
 | [`tests/`](tests/) | The tests, and the fake Linear they call. |
 | [`scripts/build.ts`](scripts/build.ts) | The build. |
 

@@ -7,7 +7,11 @@ import { readStates, writeState } from "./states";
 import { readCandidates, readTickets } from "./tickets";
 import { readWorkspace } from "./workspace";
 
-const KEY = "key";
+export const KEY = "key";
+
+// A key as the user types it, not saved yet: the workspace it opens names its row in Sonar's Services. A key Linear
+// refuses rejects with `refused` (./api.ts).
+export const workspaceOfKey = (url: string) => async (value: string) => ({ account: (await readWorkspace(linearAt(url, value))).name });
 
 export function linearProvider(api: ServerApi, url: string): TicketsProvider {
 	// Sonar asks `ready` first: a call for a project without a key is a failure of the call.
