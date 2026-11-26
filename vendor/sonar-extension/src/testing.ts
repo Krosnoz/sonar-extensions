@@ -15,7 +15,7 @@ import { readManifest } from "./manifest";
 import type { ClosedSession } from "./measures";
 import { checkedJudge, CORE_LENT_NAMES, judgeRefusal, keptJudge } from "./judge-answers";
 import type { JudgeProvider, Port, TicketsProvider } from "./ports";
-import { checkedTickets, ticketsRefusal } from "./ticket-answers";
+import { checkedTickets, keptTickets, ticketsRefusal } from "./ticket-answers";
 import { type Measures, measuresOf, notDeclared } from "./testing-measures";
 import { eventRefusal, isToolFullName, isToolName, LIVE_MOST, provideRefusal, routeStatus, SERVER_EVENTS, TOOL_FULL_NAME_MOST, wrongToolField } from "./rules";
 
@@ -179,10 +179,11 @@ function portsOf(provides: Manifest["provides"]) {
 	};
 	const provideTickets = (given: TicketsProvider) => {
 		refused("tickets", tickets !== null);
-		const missing = ticketsRefusal(given);
+		const provider = keptTickets(given);
+		const missing = ticketsRefusal(given) ?? ticketsRefusal(provider);
 		if (missing === "name") throw new Error('The "name" of its tickets provider must have 1 to 40 characters.');
 		if (missing) throw new Error(`Its tickets provider has no "${missing}": it must be a function.`);
-		tickets = given;
+		tickets = provider;
 	};
 	const provide = (given: JudgeProvider) => {
 		refused("judge", judge !== null);

@@ -5,7 +5,8 @@
 
 import type { Ticket, TicketsProvider, TicketState } from "./ports";
 
-const TICKET_ID = /^[A-Za-z0-9]+-\d+$/;
+// A ticket's identifier: its team's prefix, then its number. Sonar's route asks a tracker for no other.
+export const TICKET_ID = /^[A-Za-z0-9]+-\d+$/;
 const TEAM_PREFIX = /^[A-Za-z0-9]{1,40}$/;
 // A hexadecimal colour as a tracker writes it: "#" and 3, 4, 6 or 8 digits.
 const COLOR = /^#(?:[0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/;
@@ -57,6 +58,9 @@ function listOf<A>(answer: unknown, most: number, decode: (item: unknown) => A |
 	return items.every((each) => each !== undefined) ? items : undefined;
 }
 
+// Whether a project can reach the tracker, as `ready` says it.
+export const readyOf = (answer: unknown): boolean | undefined => (typeof answer === "boolean" ? answer : undefined);
+
 // One answer per id asked, in their order: a ticket, or null for one the tracker does not know.
 export const ticketsOf = (answer: unknown, asked: number): (Ticket | null)[] | undefined =>
 	Array.isArray(answer) && answer.length === asked ? listOf(answer, TICKETS_MOST, (item) => (item === null ? null : ticketOf(item))) : undefined;
@@ -86,12 +90,26 @@ async function read<A>(call: string, answer: Promise<unknown>, decode: (answer: 
 	return decoded;
 }
 
+// The provider as `provide.tickets` keeps it: its `name` read once, so that an object changed later, or a getter read
+// again, does not escape the check. Its calls go to the extension's object.
+export function keptTickets(provider: TicketsProvider): TicketsProvider {
+	return {
+		name: provider.name,
+		ready: (project) => provider.ready(project),
+		workspace: (project) => provider.workspace(project),
+		tickets: (project, ids) => provider.tickets(project, ids),
+		candidates: (project) => provider.candidates(project),
+		states: (project, id) => provider.states(project, id),
+		setState: (project, id, stateId) => provider.setState(project, id, stateId),
+	};
+}
+
 // The provider as the kit gives it to a test: each answer Sonar refuses fails the call, with Sonar's words. It holds no
 // delay over a call: Sonar does.
 export function checkedTickets(provider: TicketsProvider): TicketsProvider {
 	return {
 		name: provider.name,
-		ready: (project) => provider.ready(project),
+		ready: async (project) => read("ready", Promise.resolve(provider.ready(project)), readyOf),
 		workspace: (project) => read("workspace", provider.workspace(project), workspaceOf),
 		tickets: (project, ids) => read("tickets", provider.tickets(project, ids), (answer) => ticketsOf(answer, ids.length)),
 		candidates: (project) => read("candidates", provider.candidates(project), candidatesOf),
