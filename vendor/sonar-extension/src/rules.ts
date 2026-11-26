@@ -113,7 +113,7 @@ export const CORE_SCREENS: readonly CoreScreen[] = ["trust", "project-statistics
 export const isCoreScreen = (name: unknown): name is CoreScreen => CORE_SCREENS.some((each) => each === name);
 
 // The ports of the core a card may declare it fills (Manifest.provides of ./contract.ts).
-export const PORTS: readonly Port[] = ["judge"];
+export const PORTS: readonly Port[] = ["judge", "tickets"];
 export const isPort = (value: unknown): value is Port => PORTS.some((each) => each === value);
 
 // Why an extension may not fill `port` now (ServerApi's provide of ./contract.ts): its card does not declare it, its
@@ -127,6 +127,10 @@ export const provideRefusal = (
 
 // Whether a port's call failed as "off" (./ports.ts): the core then does without the answer, as with no extension.
 export const isOff = (error: unknown): boolean => typeof error === "object" && error !== null && "off" in error && error.off === true;
+
+// Whether a tickets call failed as "refused" (./ports.ts): the tracker refused the project's key, which is not an
+// unreachable tracker.
+export const isRefused = (error: unknown): boolean => typeof error === "object" && error !== null && "refused" in error && error.refused === true;
 
 // What a route that throws answers: 500, unless the extension gave its Error a status from 400 to 499.
 export const routeStatus = (error: unknown): number => {

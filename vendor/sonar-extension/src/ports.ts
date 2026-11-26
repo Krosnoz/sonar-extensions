@@ -3,10 +3,11 @@
 // them: an extension built once keeps working while the core changes.
 //
 // A call that rejects with an Error bearing `off: true` (Object.assign(new Error("…"), { off: true })) tells the core the
-// port is off: it does without the answer, as with no extension at all. Any other rejection is a failure the core logs.
+// port is off: it does without the answer, as with no extension at all. A rejection with an Error bearing `refused: true`
+// tells the core the tracker refused the project's key (tickets). Any other rejection is a failure the core logs.
 
 // The ports of the core an extension may fill (PORTS of ./rules.ts).
-export type Port = "judge";
+export type Port = "judge" | "tickets";
 
 // A session, as the judge reads it beside another one: its name and what it does.
 export type JudgedSession = { readonly name: string; readonly summary: string };
@@ -57,4 +58,34 @@ export type JudgeProvider = {
 	// judge of the same name on the other computer: a key never reaches a service the user did not choose. Today the
 	// linked computer runs a lent key named "typesafe" alone.
 	readonly lentAs?: string;
+};
+
+export type Ticket = {
+	readonly id: string;
+	readonly title: string;
+	readonly url: string;
+	readonly state: string;
+	readonly stateType: string;
+	readonly color: string;
+	readonly assignee: string | null;
+};
+export type TicketState = { readonly id: string; readonly name: string; readonly type: string; readonly color: string };
+
+// A ticket tracker (Linear, Jira…), as an extension gives it. The core keeps the rest: the cache, the links between
+// sessions and tickets, the search of a ticket in a session's texts, the agents that write a ticket.
+export type TicketsProvider = {
+	// The tracker's name, as the page says it ("Linear"): 1 to 40 characters.
+	readonly name: string;
+	// Whether the project can reach the tracker (a key saved): false, nothing is asked.
+	readonly ready: (project: string) => boolean | Promise<boolean>;
+	// The workspace the project reaches: its name and its teams' prefixes ("ABC" of "ABC-12").
+	readonly workspace: (project: string) => Promise<{ readonly name: string; readonly teams: readonly string[] }>;
+	// One answer per id, in their order; null for a ticket the tracker does not know.
+	readonly tickets: (project: string, ids: readonly string[]) => Promise<readonly (Ticket | null)[]>;
+	// Tickets to link: the user's own open ones, then the workspace's recently updated open ones.
+	readonly candidates: (project: string) => Promise<readonly Ticket[]>;
+	readonly states: (project: string, id: string) => Promise<readonly TicketState[]>;
+	readonly setState: (project: string, id: string, stateId: string) => Promise<void>;
+	// A key tried before it is saved: the workspace it opens. Rejects when the tracker refuses it.
+	readonly check?: (key: string) => Promise<{ readonly name: string; readonly teams: readonly string[] }>;
 };

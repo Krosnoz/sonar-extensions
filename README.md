@@ -4,6 +4,7 @@ Extensions for [Sonar](https://github.com/Krosnoz/sonar), one folder per extensi
 
 | Extension | What it does | Install address |
 | --- | --- | --- |
+| [Linear](linear-tickets/) | Linear as Sonar's ticket tracker: the issues Sonar asks for, your open ones to link, and an issue's state. A key for each project. | `Krosnoz/sonar-extensions/linear-tickets` |
 | [Pinned note](pinned-note/) | A note you write once in Settings: every agent can read it. The example extension. | `Krosnoz/sonar-extensions/pinned-note` |
 | [Statistics](statistics/) | Week by week: whether the work goes faster, whether the agents work well, what it costs and how much of your time it takes. | `Krosnoz/sonar-extensions/statistics` |
 | [Town](town/) | Turns the Map into an isometric town where you watch the agents at work. On a computer only. | `Krosnoz/sonar-extensions/town` |

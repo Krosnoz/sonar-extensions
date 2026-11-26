@@ -1,0 +1,31 @@
+{
+	"id": "linear-tickets",
+	"name": "Linear",
+	"version": "0.1.0",
+	"contract": 1,
+	"summary": "Your Linear issues as Sonar's tickets",
+	"description": "Linear as Sonar's ticket tracker, with a key for each project: it reads your workspace, the issues Sonar asks for and the open ones to link, and changes the state of an issue when Sonar asks it to.",
+	"translations": {
+		"fr": {
+			"summary": "Tes tickets Linear dans Sonar",
+			"description": "Linear comme suivi de tickets de Sonar, avec une clé par projet : il lit ton espace de travail, les tickets que Sonar demande et les tickets ouverts à lier, et change l'état d'un ticket quand Sonar le demande.",
+			"keys": {
+				"key": {
+					"why": "Elle ouvre les tickets du projet dans Linear. Crée-la dans Linear : Settings, API, Personal API keys."
+				}
+			}
+		}
+	},
+	"server": "server.js",
+	"icon": "icon.svg",
+	"keys": [
+		{
+			"name": "key",
+			"scope": "project",
+			"label": "Linear",
+			"why": "It opens the project's issues in Linear. Create it in Linear: Settings, API, Personal API keys."
+		}
+	],
+	"calls": ["api.linear.app"],
+	"provides": ["tickets"]
+}

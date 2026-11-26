@@ -14,7 +14,8 @@ import type { AgentTool, Json, ProjectLine, RouteHandler, RouteRequest, ServerAp
 import { readManifest } from "./manifest";
 import type { ClosedSession } from "./measures";
 import { checkedJudge, CORE_LENT_NAMES, judgeRefusal, keptJudge } from "./judge-answers";
-import type { JudgeProvider } from "./ports";
+import type { JudgeProvider, Port, TicketsProvider } from "./ports";
+import { checkedTickets, ticketsRefusal } from "./ticket-answers";
 import { type Measures, measuresOf, notDeclared } from "./testing-measures";
 import { eventRefusal, isToolFullName, isToolName, LIVE_MOST, provideRefusal, routeStatus, SERVER_EVENTS, TOOL_FULL_NAME_MOST, wrongToolField } from "./rules";
 
@@ -50,6 +51,9 @@ export type Bench = {
 	// The judge it gave (`provide.judge`), as Sonar would call it: an answer Sonar refuses fails the call
 	// (./judge-answers.ts); null while it gave none.
 	readonly judge: () => JudgeProvider | null;
+	// The tickets provider it gave (`provide.tickets`), as Sonar would call it: an answer Sonar refuses fails the call
+	// (./ticket-answers.ts); null while it gave none.
+	readonly tickets: () => TicketsProvider | null;
 };
 
 // `card`: its extension.json as read; refused, the bench throws why. `dataDir`: a new temporary folder by default.
@@ -165,11 +169,23 @@ function eventsOf(log: string[], reads: Manifest["reads"], closed: ClosedSession
 function portsOf(provides: Manifest["provides"]) {
 	let starting = true;
 	let judge: JudgeProvider | null = null;
+	let tickets: TicketsProvider | null = null;
+	// Sonar's words for a port that may not be filled now (provideRefusal of ./rules.ts).
+	const refused = (port: Port, filled: boolean) => {
+		const refusal = provideRefusal(provides, port, starting, filled);
+		if (refusal === "undeclared") throw new Error(`Its card does not declare the port "${port}": add "${port}" to its "provides".`);
+		if (refusal === "late") throw new Error(`The port "${port}" is filled during its start only.`);
+		if (refusal === "twice") throw new Error(`It already fills the port "${port}".`);
+	};
+	const provideTickets = (given: TicketsProvider) => {
+		refused("tickets", tickets !== null);
+		const missing = ticketsRefusal(given);
+		if (missing === "name") throw new Error('The "name" of its tickets provider must have 1 to 40 characters.');
+		if (missing) throw new Error(`Its tickets provider has no "${missing}": it must be a function.`);
+		tickets = given;
+	};
 	const provide = (given: JudgeProvider) => {
-		const refusal = provideRefusal(provides, "judge", starting, judge !== null);
-		if (refusal === "undeclared") throw new Error(`Its card does not declare the port "judge": add "judge" to its "provides".`);
-		if (refusal === "late") throw new Error(`The port "judge" is filled during its start only.`);
-		if (refusal === "twice") throw new Error(`It already fills the port "judge".`);
+		refused("judge", judge !== null);
 		const provider = keptJudge(given);
 		const named = judgeRefusal(provider);
 		if (named === "lend-unnamed") throw new Error('Its judge lends a key without "lentAs": name the key it lends.');
@@ -187,7 +203,7 @@ function portsOf(provides: Manifest["provides"]) {
 			starting = false;
 		}
 	};
-	return { provide, start, judge: () => (judge ? checkedJudge(judge) : null) };
+	return { provide, provideTickets, start, judge: () => (judge ? checkedJudge(judge) : null), tickets: () => (tickets ? checkedTickets(tickets) : null) };
 }
 
 // Its settings, kept as JSON carries them.
@@ -248,7 +264,7 @@ export function fakeServer(options: BenchOptions): Bench {
 		projects: projectsOf(projects, left, trust),
 		...reads,
 		on: events.on,
-		provide: { judge: ports.provide },
+		provide: { judge: ports.provide, tickets: ports.provideTickets },
 	};
 	return {
 		api,
@@ -266,5 +282,6 @@ export function fakeServer(options: BenchOptions): Bench {
 		call: tools.call,
 		start: (start) => ports.start(() => start(api)),
 		judge: ports.judge,
+		tickets: ports.tickets,
 	};
 }
