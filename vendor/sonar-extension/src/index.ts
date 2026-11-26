@@ -50,7 +50,7 @@ export { type CardTranslation, type Manifest, type ManifestKey } from "./card";
 export { KEY_WHY_MOST, localized, SUMMARY_MOST } from "./card-texts";
 export { type ManifestReading, readManifest, type Refusal, RESERVED_IDS } from "./manifest";
 export { type JudgedSession, type JudgeProvider, type JudgeRoute, type Port, type Ticket, type TicketsProvider, type TicketState } from "./ports";
-export { candidatesOf, statesOf, ticketsCannotRead, ticketsOf, ticketsRefusal, workspaceOf } from "./ticket-answers";
+export { candidatesOf, statesOf, TICKETS_MOST, ticketsCannotRead, ticketsOf, ticketsRefusal, workspaceOf } from "./ticket-answers";
 export {
 	askYesOrNo,
 	cannotRead,

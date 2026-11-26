@@ -134,10 +134,9 @@ test("a change of state is sent as variables; one Linear says it did not make re
 	await expect(tickets.setState("acme", "ABC-1", "s-done")).rejects.toThrow("Linear did not change the state of ABC-1");
 });
 
-test("the workspace a project reaches: its name and its teams' prefixes; the same for a key not saved yet", async () => {
+test("the workspace a project reaches: its name and its teams' prefixes", async () => {
 	const { tickets } = await started(linear);
 	expect(await tickets.workspace("acme")).toEqual({ name: "ACME", teams: ["ABC", "OPS"] });
-	expect(await tickets.check?.("other-key")).toEqual({ name: "ACME", teams: ["ABC", "OPS"] });
-	expect(linear.asked.map((asked) => asked.authorization)).toEqual(["example-key", "other-key"]);
+	expect(linear.asked.map((asked) => asked.authorization)).toEqual(["example-key"]);
 	expect(linear.asked[0]?.query).toContain("teams(first: 200)");
 });

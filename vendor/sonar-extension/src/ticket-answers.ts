@@ -13,7 +13,8 @@ const ID_MOST = 40;
 const TITLE_MOST = 500;
 const URL_MOST = 2000;
 const WORD_MOST = 200;
-const TICKETS_MOST = 200;
+// The tickets one answer holds at most: Sonar asks for more in several calls.
+export const TICKETS_MOST = 200;
 const STATES_MOST = 100;
 const TEAMS_MOST = 200;
 const NAME_MOST = 40;
@@ -73,12 +74,9 @@ export function workspaceOf(answer: unknown): { name: string; teams: string[] } 
 
 // What a tickets provider lacks, by the first field missing or not of its type; null when it has all it needs.
 export function ticketsRefusal(provider: TicketsProvider): keyof TicketsProvider | null {
-	const { name, check } = provider;
-	if (!named(name, NAME_MOST)) return "name";
+	if (!named(provider.name, NAME_MOST)) return "name";
 	const calls = ["ready", "workspace", "tickets", "candidates", "states", "setState"] as const;
-	const missing = calls.find((call) => typeof provider[call] !== "function");
-	if (missing) return missing;
-	return check === undefined || typeof check === "function" ? null : "check";
+	return calls.find((call) => typeof provider[call] !== "function") ?? null;
 }
 
 // One answer of the kit's provider, decoded, or the call fails as in Sonar.
@@ -91,7 +89,6 @@ async function read<A>(call: string, answer: Promise<unknown>, decode: (answer: 
 // The provider as the kit gives it to a test: each answer Sonar refuses fails the call, with Sonar's words. It holds no
 // delay over a call: Sonar does.
 export function checkedTickets(provider: TicketsProvider): TicketsProvider {
-	const check = provider.check?.bind(provider);
 	return {
 		name: provider.name,
 		ready: (project) => provider.ready(project),
@@ -100,6 +97,5 @@ export function checkedTickets(provider: TicketsProvider): TicketsProvider {
 		candidates: (project) => read("candidates", provider.candidates(project), candidatesOf),
 		states: (project, id) => read("states", provider.states(project, id), statesOf),
 		setState: (project, id, stateId) => provider.setState(project, id, stateId),
-		...(check ? { check: (key: string) => read("check", check(key), workspaceOf) } : {}),
 	};
 }

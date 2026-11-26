@@ -21,7 +21,6 @@ Each call is one request to Linear's GraphQL API ([`src/server/api.ts`](src/serv
 | `candidates` | your open issues (50), and the open issues updated last (100) | yours first, each issue once |
 | `states` | the states of the issue's team | in the order of the team's board |
 | `setState` | the change of the issue's state | rejects when Linear says it did not make it |
-| `check` | the workspace, with a key given | the workspace the key opens |
 
 `tickets` finds the issues by a filter on their identifiers. Linear's `issue(id:)` would fail the whole request for one identifier it does not know. The limit: an issue moved to another team may not be found by its former identifier.
 

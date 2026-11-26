@@ -24,6 +24,5 @@ export function linearProvider(api: ServerApi, url: string): TicketsProvider {
 		candidates: async (project) => readCandidates(await linearFor(project)),
 		states: async (project, id) => readStates(await linearFor(project), id),
 		setState: async (project, id, stateId) => writeState(await linearFor(project), id, stateId),
-		check: (key) => readWorkspace(linearAt(url, key)),
 	};
 }

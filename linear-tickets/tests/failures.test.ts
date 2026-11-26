@@ -47,12 +47,12 @@ test("a call for a project without a key rejects, says which, and asks Linear no
 	expect(linear.asked).toHaveLength(0);
 });
 
-test("a key Linear refuses (401, 403): every call rejects with Linear's message, refused; check too", async () => {
+test("a key Linear refuses (401, 403): every call rejects with Linear's message, refused", async () => {
 	const { tickets } = await started(linear);
 	for (const status of [401, 403]) {
 		linear.answer = () => unauthorized(status);
-		for (const call of [...calls.map((call) => () => call(tickets, "acme")), () => tickets.check?.("wrong-key")]) {
-			const error = await failureOf(call());
+		for (const call of calls) {
+			const error = await failureOf(call(tickets, "acme"));
 			expect(error.message).toBe("Authentication required, not authenticated");
 			expect(isRefused(error)).toBe(true);
 		}
@@ -67,7 +67,6 @@ test("Linear down, or an error of its own: every call rejects, the key not refus
 	const { tickets } = await started(linear);
 	linear.answer = () => new Response("down", { status: 503 });
 	for (const call of calls) expectUnreachable(await failureOf(call(tickets, "acme")), "Linear answered 503");
-	expectUnreachable(await failureOf(tickets.check?.("example-key")), "Linear answered 503");
 	linear.answer = () => Response.json({ errors: [{ message: "Rate limit exceeded" }] }, { status: 400 });
 	expectUnreachable(await failureOf(tickets.candidates("acme")), "Rate limit exceeded");
 	// Linear answers an issue it does not know by an error, without data.

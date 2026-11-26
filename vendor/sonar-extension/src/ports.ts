@@ -86,6 +86,4 @@ export type TicketsProvider = {
 	readonly candidates: (project: string) => Promise<readonly Ticket[]>;
 	readonly states: (project: string, id: string) => Promise<readonly TicketState[]>;
 	readonly setState: (project: string, id: string, stateId: string) => Promise<void>;
-	// A key tried before it is saved: the workspace it opens. Rejects when the tracker refuses it.
-	readonly check?: (key: string) => Promise<{ readonly name: string; readonly teams: readonly string[] }>;
 };

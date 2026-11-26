@@ -1,6 +1,6 @@
 # vendor/sonar-extension
 
-An exact copy of `packages/extension/` of Sonar's repository, from its branch `feat/linear-out` (commit `0f23a3c24`, with the port `tickets`): the contract between Sonar and an extension (`@sonar/extension`) and its testing kit (`@sonar/extension/testing`). It has no dependency. Once that branch is merged, it is to be copied again from `main`.
+An exact copy of `packages/extension/` of Sonar's repository, from its branch `feat/linear-out` (commit `abfb43cb2`, with the port `tickets`): the contract between Sonar and an extension (`@sonar/extension`) and its testing kit (`@sonar/extension/testing`). It has no dependency. Once that branch is merged, it is to be copied again from `main`.
 
 The contract is not published on npm yet. Until it is, every extension of this repository links this one copy by `"@sonar/extension": "file:../vendor/sonar-extension"` in its `package.json`. Once it is published, remove this folder and depend on the published package.
 
