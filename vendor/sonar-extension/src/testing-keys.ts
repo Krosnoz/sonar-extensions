@@ -5,6 +5,9 @@ import type { Manifest } from "./card";
 import type { ServerApi } from "./contract";
 import { checkedKeyTrial, type KeyTrialRun } from "./key-trial";
 
+// The trial as a test calls it: the key, then the project names Sonar would give.
+export type KeyTrialCall = ReturnType<typeof checkedKeyTrial>;
+
 const keyOf = (name: string, project: string | undefined) => JSON.stringify([name, project ?? null]);
 
 export function keysOf(manifest: Manifest) {
@@ -30,7 +33,7 @@ export function keysOf(manifest: Manifest) {
 	// The bench's own: the keys a test gives, and the trials it calls.
 	const bench = {
 		setKey: (name: string, value: string, project?: string) => void given.set(keyOf(name, project), value),
-		keyTrial: (name: string): KeyTrialRun | null => {
+		keyTrial: (name: string): KeyTrialCall | null => {
 			const run = trials.get(name);
 			return run ? checkedKeyTrial(run) : null;
 		},

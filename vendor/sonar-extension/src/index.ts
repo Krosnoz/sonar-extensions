@@ -1,5 +1,5 @@
 // The contract between Sonar and the extensions published outside its repository (./contract.ts, the Map in ./map.ts, the page's look in ./look.ts, its sounds in ./sounds.ts, what it says of a session in ./session.ts, what Sonar measures in
-// ./measures.ts, the ports an extension fills in ./ports.ts, what their judge may give in ./judge-answers.ts, their tickets provider in ./ticket-answers.ts), and the reading of
+// ./measures.ts, the ports an extension fills in ./ports.ts, what their judge may give in ./judge-answers.ts, their tickets provider in ./ticket-answers.ts, their code host in ./code-host-answers.ts), and the reading of
 // their card (./manifest.ts), and the rules both sides apply (./rules.ts). No dependency: an extension's author may read
 // it without the rest of Sonar. The card's types are in ./card.ts, its words in other languages read by ./card-texts.ts. Its testing kit is apart, at @sonar/extension/testing (./testing.ts).
 
@@ -47,10 +47,44 @@ export { type MapPull, type MapSession, type PageMap } from "./map";
 export { type PageSession, type SessionEvent } from "./session";
 export { type PageSounds, type SoundLine } from "./sounds";
 export { type CardTranslation, type Manifest, type ManifestKey } from "./card";
-export { accountOf, type KeyTrialRun, trialReason } from "./key-trial";
+export { accountOf, type KeyTrialAnswer, type KeyTrialRun, reachOf, trialReason } from "./key-trial";
 export { KEY_WHY_MOST, localized, SUMMARY_MOST } from "./card-texts";
 export { type ManifestReading, readManifest, type Refusal, RESERVED_IDS } from "./manifest";
-export { type JudgedSession, type JudgeProvider, type JudgeRoute, type Port, type Ticket, type TicketsProvider, type TicketState } from "./ports";
+export {
+	type CodeHostProvider,
+	type HostActivity,
+	type HostCheck,
+	type HostGitAccess,
+	type HostIssue,
+	type HostMergeable,
+	type HostPull,
+	type JudgedSession,
+	type JudgeProvider,
+	type JudgeRoute,
+	type MergedPull,
+	type OpenPullLine,
+	type Port,
+	type PullReading,
+	type Ticket,
+	type TicketsProvider,
+	type TicketState,
+	type TrackedBranchLine,
+} from "./ports";
+export {
+	BRANCHES_MOST,
+	codeHostCannotRead,
+	codeHostRefusal,
+	gitAccessOf,
+	hostAccountOf,
+	hostIssuesOf,
+	keptCodeHost,
+	mergedPullsOf,
+	openedPullOf,
+	pullReadingOf,
+	pullStateOf,
+	repositoryNameOf,
+	trackedOf,
+} from "./code-host-answers";
 export {
 	candidatesOf,
 	keptTickets,

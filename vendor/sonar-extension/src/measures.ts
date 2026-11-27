@@ -59,9 +59,10 @@ export type SessionTimeline = {
 
 // A week of the user's velocity, Monday to Sunday (`start`). `prs`: the user's pull requests merged, as Sonar counts them.
 // `leadMs`: their median time from opened to merged; null when `prs` is 0. In a project's weeks (Velocity's
-// `projects[].weeks`), `prs` and `leadMs` are null when GitHub did not give the project's PRs: no GitHub repository set,
-// no key, a key GitHub does not know, or GitHub failed. In Velocity's `weeks` (every project together), `prs` and
-// `leadMs` count only the projects whose PRs GitHub gave, and are null when it gave none: read `projects` to know which.
+// `projects[].weeks`), `prs` and `leadMs` are null when the code host did not give the project's PRs: no repository
+// there, no key, a key it does not know, or the host failed. In Velocity's `weeks` (every project together), `prs` and
+// `leadMs` count only the projects whose PRs the code host gave, and are null when it gave none: read `projects` to know
+// which.
 // `commits`: the user's commits. `parallel`: the median, over the days the user wrote to an agent, of the sessions they
 // wrote in. `replyMs`: the median of their reply delays. `parallel` and `replyMs` are null when there is nothing to
 // count that week.

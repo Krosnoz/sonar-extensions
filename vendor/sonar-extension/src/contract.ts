@@ -13,7 +13,7 @@
 import type { KeyTrialRun } from "./key-trial";
 import type { PageLook } from "./look";
 import type { PageMap } from "./map";
-import type { JudgeProvider, TicketsProvider } from "./ports";
+import type { CodeHostProvider, JudgeProvider, TicketsProvider } from "./ports";
 import type { PageSession } from "./session";
 import type { PageSounds } from "./sounds";
 import type {
@@ -167,7 +167,11 @@ export type ServerApi = {
 	readonly on: <Name extends keyof ServerEvents>(event: Name, listen: (data: ServerEvents[Name]) => void) => () => void;
 	// Fills a port of the core (./ports.ts), during its start only. Throws for a port its card does not declare
 	// (`provides`), one it filled already, or once its start ended.
-	readonly provide: { readonly judge: (provider: JudgeProvider) => void; readonly tickets: (provider: TicketsProvider) => void };
+	readonly provide: {
+		readonly judge: (provider: JudgeProvider) => void;
+		readonly tickets: (provider: TicketsProvider) => void;
+		readonly codeHost: (provider: CodeHostProvider) => void;
+	};
 };
 
 // What `start` may return: called once when the server stops.

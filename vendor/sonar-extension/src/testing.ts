@@ -13,13 +13,11 @@ import type { Manifest } from "./card";
 import type { AgentTool, Json, ProjectLine, RouteHandler, RouteRequest, ServerApi, ServerEntry, ServerEvents, SessionLine, Stop } from "./contract";
 import { readManifest } from "./manifest";
 import type { ClosedSession } from "./measures";
-import { checkedJudge, CORE_LENT_NAMES, judgeRefusal, keptJudge } from "./judge-answers";
-import type { KeyTrialRun } from "./key-trial";
-import type { JudgeProvider, Port, TicketsProvider } from "./ports";
-import { checkedTickets, keptTickets, ticketsRefusal } from "./ticket-answers";
-import { keysOf } from "./testing-keys";
+import type { CodeHostProvider, JudgeProvider, TicketsProvider } from "./ports";
+import { keysOf, type KeyTrialCall } from "./testing-keys";
 import { type Measures, measuresOf, notDeclared } from "./testing-measures";
-import { eventRefusal, isToolFullName, isToolName, LIVE_MOST, provideRefusal, routeStatus, SERVER_EVENTS, TOOL_FULL_NAME_MOST, wrongToolField } from "./rules";
+import { portsOf } from "./testing-ports";
+import { eventRefusal, isToolFullName, isToolName, LIVE_MOST, routeStatus, SERVER_EVENTS, TOOL_FULL_NAME_MOST, wrongToolField } from "./rules";
 
 export type Answer = { readonly status: number; readonly body: Json };
 export type ToolAnswer = { readonly text: string; readonly isError: boolean };
@@ -36,8 +34,8 @@ export type Bench = {
 	// A key the user gave: for a project when its card keeps it per project.
 	readonly setKey: (name: string, value: string, project?: string) => void;
 	// The trial it gave for a key (`keys.trial`), as Sonar would call it: the value trimmed, an answer Sonar refuses
-	// failing the call (./key-trial.ts); null while it gave none.
-	readonly keyTrial: (name: string) => KeyTrialRun | null;
+	// failing the call (./key-trial.ts); null while it gave none. Without project names, as Sonar tries a key saved.
+	readonly keyTrial: (name: string) => KeyTrialCall | null;
 	// The open sessions and the projects it lists, as the test fills them.
 	readonly sessions: SessionLine[];
 	readonly projects: ProjectLine[];
@@ -59,6 +57,9 @@ export type Bench = {
 	// The tickets provider it gave (`provide.tickets`), as Sonar would call it: an answer Sonar refuses fails the call
 	// (./ticket-answers.ts); null while it gave none.
 	readonly tickets: () => TicketsProvider | null;
+	// The code host it gave (`provide.codeHost`), as Sonar would call it (./code-host-answers.ts); null while it gave
+	// none.
+	readonly codeHost: () => CodeHostProvider | null;
 };
 
 // `card`: its extension.json as read; refused, the bench throws why. `dataDir`: a new temporary folder by default.
@@ -156,49 +157,6 @@ function eventsOf(log: string[], reads: Manifest["reads"], closed: ClosedSession
 	return { emit, on };
 }
 
-// The ports it fills, refused as Sonar refuses them: a port its card does not declare, one filled twice, or once its
-// start ended. Until a test starts it through the bench, its start counts as under way.
-function portsOf(provides: Manifest["provides"]) {
-	let starting = true;
-	let judge: JudgeProvider | null = null;
-	let tickets: TicketsProvider | null = null;
-	// Sonar's words for a port that may not be filled now (provideRefusal of ./rules.ts).
-	const refused = (port: Port, filled: boolean) => {
-		const refusal = provideRefusal(provides, port, starting, filled);
-		if (refusal === "undeclared") throw new Error(`Its card does not declare the port "${port}": add "${port}" to its "provides".`);
-		if (refusal === "late") throw new Error(`The port "${port}" is filled during its start only.`);
-		if (refusal === "twice") throw new Error(`It already fills the port "${port}".`);
-	};
-	const provideTickets = (given: TicketsProvider) => {
-		refused("tickets", tickets !== null);
-		const provider = keptTickets(given);
-		const missing = ticketsRefusal(given) ?? ticketsRefusal(provider);
-		if (missing === "name") throw new Error('The "name" of its tickets provider must have 1 to 40 characters.');
-		if (missing) throw new Error(`Its tickets provider has no "${missing}": it must be a function.`);
-		tickets = provider;
-	};
-	const provide = (given: JudgeProvider) => {
-		refused("judge", judge !== null);
-		const provider = keptJudge(given);
-		const named = judgeRefusal(provider);
-		if (named === "lend-unnamed") throw new Error('Its judge lends a key without "lentAs": name the key it lends.');
-		if (named === "lent-as-core")
-			throw new Error(
-				`Its judge's "lentAs" "${String(provider.lentAs)}" is a name Sonar lends itself (${CORE_LENT_NAMES.join(", ")}): name its key otherwise.`,
-			);
-		if (named) throw new Error(`Its judge's "lentAs" must have 2 to 40 characters: lower case letters, digits and "-".`);
-		judge = provider;
-	};
-	const start = async (run: () => void | Stop | Promise<void | Stop>) => {
-		try {
-			return await run();
-		} finally {
-			starting = false;
-		}
-	};
-	return { provide, provideTickets, start, judge: () => (judge ? checkedJudge(judge) : null), tickets: () => (tickets ? checkedTickets(tickets) : null) };
-}
-
 // Its settings, kept as JSON carries them.
 function settingsOf(saved: Json): ServerApi["settings"] {
 	let settings = saved;
@@ -257,7 +215,7 @@ export function fakeServer(options: BenchOptions): Bench {
 		projects: projectsOf(projects, left, trust),
 		...reads,
 		on: events.on,
-		provide: { judge: ports.provide, tickets: ports.provideTickets },
+		provide: ports.provide,
 	};
 	return {
 		api,
@@ -274,7 +232,6 @@ export function fakeServer(options: BenchOptions): Bench {
 		tools: tools.list,
 		call: tools.call,
 		start: (start) => ports.start(() => start(api)),
-		judge: ports.judge,
-		tickets: ports.tickets,
+		...ports.bench,
 	};
 }

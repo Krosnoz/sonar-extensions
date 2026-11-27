@@ -3,6 +3,7 @@
 // its own tests as in Sonar. Bounds keep a tracker's answer from filling the cache or the page. Plain functions: the kit
 // imports nothing of Sonar.
 
+import { fieldOf, isHttps, listOf, named, text } from "./answer-fields";
 import type { Ticket, TicketsProvider, TicketState } from "./ports";
 
 // A ticket's identifier: its team's prefix, then its number. Sonar's route asks a tracker for no other.
@@ -12,7 +13,6 @@ const TEAM_PREFIX = /^[A-Za-z0-9]{1,40}$/;
 const COLOR = /^#(?:[0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/;
 const ID_MOST = 40;
 const TITLE_MOST = 500;
-const URL_MOST = 2000;
 const WORD_MOST = 200;
 // The tickets one answer holds at most: Sonar asks for more in several calls.
 export const TICKETS_MOST = 200;
@@ -23,18 +23,7 @@ const NAME_MOST = 40;
 // What Sonar says of an answer it refuses.
 export const ticketsCannotRead = (call: string): string => `The extension's tickets provider answered ${call} with what Sonar cannot read`;
 
-const fieldOf = (value: unknown, key: string): unknown => (typeof value === "object" && value !== null ? Reflect.get(value, key) : undefined);
-const text = (value: unknown, most: number): value is string => typeof value === "string" && value.length <= most;
-const named = (value: unknown, most: number): value is string => text(value, most) && value.length > 0;
 const isColor = (value: unknown): value is string => value === "" || (typeof value === "string" && COLOR.test(value));
-const isHttps = (value: unknown): value is string => {
-	if (!named(value, URL_MOST)) return false;
-	try {
-		return new URL(value).protocol === "https:";
-	} catch {
-		return false;
-	}
-};
 
 function ticketOf(answer: unknown): Ticket | undefined {
 	const [id, title, url, state, stateType, color, assignee] = ["id", "title", "url", "state", "stateType", "color", "assignee"].map((key) =>
@@ -51,14 +40,7 @@ function stateOf(answer: unknown): TicketState | undefined {
 	return named(id, WORD_MOST) && text(name, WORD_MOST) && text(type, WORD_MOST) && isColor(color) ? { id, name, type, color } : undefined;
 }
 
-// Each item decoded, or undefined when one is refused, or the answer is no array of at most `most` items.
-function listOf<A>(answer: unknown, most: number, decode: (item: unknown) => A | undefined): A[] | undefined {
-	if (!Array.isArray(answer) || answer.length > most) return undefined;
-	const items = answer.map(decode);
-	return items.every((each) => each !== undefined) ? items : undefined;
-}
-
-// Whether a project can reach the tracker, as `ready` says it.
+// Whether a project can reach the tracker or the code host, as `ready` says it.
 export const readyOf = (answer: unknown): boolean | undefined => (typeof answer === "boolean" ? answer : undefined);
 
 // One answer per id asked, in their order: a ticket, or null for one the tracker does not know.
