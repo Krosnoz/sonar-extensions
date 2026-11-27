@@ -1,0 +1,31 @@
+{
+	"id": "github-code-host",
+	"name": "GitHub",
+	"version": "0.1.0",
+	"contract": 1,
+	"summary": "Your pull requests, CI and issues from GitHub",
+	"description": "GitHub as Sonar's code host, with a key for each project: it reads the pull requests, their CI, the issues handed to agents and the branches followed, opens the pull request of a branch, and gives the sessions' git its access.",
+	"translations": {
+		"fr": {
+			"summary": "Tes PR, leur CI et tes issues GitHub",
+			"description": "GitHub comme hébergeur de code de Sonar, avec une clé par projet : elle lit les PR, leur CI, les issues confiées aux agents et les branches suivies, ouvre la PR d'une branche et donne au git des sessions son accès.",
+			"keys": {
+				"token": {
+					"why": "Elle ouvre les PR et la CI sur les cartes, les issues confiées et l'accès git des sessions. Crée-la sur github.com : Settings, Developer settings, Personal access tokens, Tokens (classic), avec le droit « repo »."
+				}
+			}
+		}
+	},
+	"server": "server.js",
+	"icon": "icon.svg",
+	"keys": [
+		{
+			"name": "token",
+			"scope": "project",
+			"label": "GitHub",
+			"why": "It opens the pull requests and their CI on the cards, the issues given to agents and the git access of the sessions. Create it on github.com: Settings, Developer settings, Personal access tokens, Tokens (classic), with the “repo” scope."
+		}
+	],
+	"calls": ["api.github.com"],
+	"provides": ["codeHost"]
+}

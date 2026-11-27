@@ -1,0 +1,15 @@
+{
+	"name": "github-code-host",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"build": "bun scripts/build.ts",
+		"check": "tsc",
+		"test": "bun test"
+	},
+	"devDependencies": {
+		"@sonar/extension": "file:../vendor/sonar-extension",
+		"@types/bun": "1.4.4",
+		"typescript": "7.0.2"
+	}
+}
