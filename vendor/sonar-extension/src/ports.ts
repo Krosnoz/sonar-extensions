@@ -145,7 +145,7 @@ export type HostGitAccess = { readonly host: string; readonly username: string; 
 export type CodeHostProvider = {
 	// The host's name, as the page says it ("GitHub"): 1 to 40 characters.
 	readonly name: string;
-	// Whether the project reaches the host (a key saved, a repository known): false, nothing else is asked.
+	// Whether the project reaches the host (a key saved): false, nothing else is asked. The repository is asked apart (`repository`).
 	readonly ready: (project: string) => boolean | Promise<boolean>;
 	// The project's repository as the page names it ("owner/name"); null when the project has none on this host.
 	readonly repository: (project: string) => Promise<string | null>;
